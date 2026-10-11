@@ -63,8 +63,10 @@ async function getRevenue(req, res, next) {
 
     const total_revenue = result.reduce((s, d) => s + d.revenue, 0);
     const total_bills = result.reduce((s, d) => s + d.bills, 0);
+    const avg_bill = total_bills > 0 ? total_revenue / total_bills : 0;
+    const total_sessions = total_bills;
 
-    return ok(res, { total_revenue, total_bills, days: result });
+    return ok(res, { total_revenue, total_bills, avg_bill, total_sessions, days: result });
   } catch (err) {
     next(err);
   }
