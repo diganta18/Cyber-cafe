@@ -2,6 +2,7 @@
 const pool = require('../config/db');
 const { ok, fail } = require('../utils/response');
 const { calculateBill, round2 } = require('../services/billing');
+const { getBillDetail } = require('../utils/billHelper');
 
 // Helper: get billing block_minutes from settings
 async function getBlockMinutes(conn) {
@@ -21,71 +22,6 @@ async function generateBillNo(conn) {
   return `CC-${today}-${seq}`;
 }
 
-// Helper: get full bill detail
-async function getBillDetail(conn, billId) {
-  const [bills] = await conn.query(
-    `SELECT b.id, b.bill_no, b.status, b.created_at,
-            b.time_charge, b.service_charge, b.discount, b.total,
-            c.name as customer_name, c.phone as customer_phone,
-            st.name as station_name, st.hourly_rate,
-            u.name as staff_name,
-            s.start_time, s.end_time, s.id as session_id
-     FROM bills b
-     JOIN sessions s ON s.id = b.session_id
-     JOIN customers c ON c.id = s.customer_id
-     JOIN stations st ON st.id = s.station_id
-     JOIN users u ON u.id = s.staff_id
-     WHERE b.id = ?`,
-    [billId]
-  );
-  if (bills.length === 0) return null;
-  const bill = bills[0];
-
-  const [services] = await conn.query(
-    `SELECT ss.id, sv.name, ss.quantity, ss.unit_price,
-            ROUND(ss.quantity * ss.unit_price, 2) as line_total
-     FROM session_services ss
-     JOIN services sv ON sv.id = ss.service_id
-     WHERE ss.session_id = ?`,
-    [bill.session_id]
-  );
-
-  const [payments] = await conn.query(
-    'SELECT id, mode, amount, paid_at FROM payments WHERE bill_id = ? ORDER BY paid_at ASC',
-    [billId]
-  );
-
-  // Compute billed_minutes from times
-  const elapsed = bill.end_time
-    ? (new Date(bill.end_time) - new Date(bill.start_time)) / 60000
-    : null;
-
-  return {
-    id: bill.id,
-    bill_no: bill.bill_no,
-    status: bill.status,
-    created_at: bill.created_at,
-    customer: { name: bill.customer_name, phone: bill.customer_phone },
-    station: { name: bill.station_name, hourly_rate: parseFloat(bill.hourly_rate) },
-    staff: { name: bill.staff_name },
-    session: {
-      id: bill.session_id,
-      start_time: bill.start_time,
-      end_time: bill.end_time,
-      billed_minutes: elapsed !== null ? Math.max(15, Math.ceil(elapsed / 15) * 15) : null,
-    },
-    services: services.map(s => ({
-      ...s,
-      unit_price: parseFloat(s.unit_price),
-      line_total: parseFloat(s.line_total)
-    })),
-    time_charge: parseFloat(bill.time_charge),
-    service_charge: parseFloat(bill.service_charge),
-    discount: parseFloat(bill.discount),
-    total: parseFloat(bill.total),
-    payments: payments.map(p => ({ ...p, amount: parseFloat(p.amount) })),
-  };
-}
 
 // POST /api/sessions - start session
 async function startSession(req, res, next) {
