@@ -1,5 +1,5 @@
 'use strict';
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const app = require('./app');
 
 const PORT = parseInt(process.env.PORT) || 5000;
