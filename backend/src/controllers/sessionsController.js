@@ -56,7 +56,7 @@ async function startSession(req, res, next) {
 
     // Insert session
     const [result] = await conn.query(
-      "INSERT INTO sessions (customer_id, station_id, staff_id, start_time, status) VALUES (?, ?, ?, UTC_TIMESTAMP(), 'active')",
+      "INSERT INTO sessions (customer_id, station_id, staff_id, start_time, status) VALUES (?, ?, ?, NOW(), 'active')",
       [customer_id, station_id, req.user.id]
     );
     const sessionId = result.insertId;
@@ -293,7 +293,7 @@ async function endSession(req, res, next) {
 
     // Set end_time
     await conn.query(
-      "UPDATE sessions SET end_time = UTC_TIMESTAMP(), status = 'completed' WHERE id = ?",
+      "UPDATE sessions SET end_time = NOW(), status = 'completed' WHERE id = ?",
       [id]
     );
 
