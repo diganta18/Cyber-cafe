@@ -1,5 +1,5 @@
 'use strict';
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const bcrypt = require('bcryptjs');
 const pool = require('../config/db');
 
