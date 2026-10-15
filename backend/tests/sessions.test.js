@@ -1,5 +1,5 @@
 'use strict';
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/config/db');
