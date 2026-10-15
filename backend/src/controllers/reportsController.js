@@ -47,7 +47,7 @@ async function getRevenue(req, res, next) {
 
     // Fill in zero-revenue days
     const dayMap = {};
-    days.forEach((d) => { dayMap[d.date.toISOString().slice(0, 10)] = d; });
+    days.forEach((d) => { dayMap[String(d.date).slice(0, 10)] = d; });
 
     const result = [];
     const start = new Date(from);
@@ -144,7 +144,7 @@ async function exportCSV(req, res, next) {
         [from, to]
       );
       csv = 'Date,Bills,Revenue\n';
-      csv += rows.map((r) => `${r.date.toISOString().slice(0, 10)},${r.bills},${r.revenue}`).join('\n');
+      csv += rows.map((r) => `${String(r.date).slice(0, 10)},${r.bills},${r.revenue}`).join('\n');
     } else if (type === 'utilization') {
       const [rows] = await pool.query(
         `SELECT st.name as station_name, COUNT(s.id) as sessions,
