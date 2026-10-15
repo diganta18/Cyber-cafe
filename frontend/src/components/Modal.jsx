@@ -31,24 +31,28 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className={`bg-white rounded-xl shadow-xl ring-1 ring-black/5 w-full ${sizes[size]} max-h-[90vh] flex flex-col`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 id="modal-title" className="text-lg font-semibold text-gray-900">{title}</h2>
+      <div className={`
+        bg-surface-raised border border-line rounded-2xl shadow-card-hover
+        w-full ${sizes[size]} max-h-[90vh] flex flex-col
+        animate-fade-up
+      `}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+          <h2 id="modal-title" className="text-base font-bold text-ink tracking-tight">{title}</h2>
           <button
             onClick={onClose}
-            className="btn-ghost p-1.5"
+            className="text-ink-faint hover:text-ink hover:bg-surface-raised p-1.5 rounded-lg transition-all"
             aria-label="Close modal"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="overflow-y-auto flex-1 px-6 py-4">
+        <div className="overflow-y-auto flex-1 px-6 py-5">
           {children}
         </div>
       </div>
