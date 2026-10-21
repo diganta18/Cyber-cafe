@@ -38,7 +38,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
       aria-labelledby="modal-title"
     >
       <div className={`
-        bg-surface-raised border border-line rounded-2xl shadow-card-hover
+        bg-surface border border-line rounded-2xl shadow-card-hover
         w-full ${sizes[size]} max-h-[90vh] flex flex-col
         animate-fade-up
       `}>
