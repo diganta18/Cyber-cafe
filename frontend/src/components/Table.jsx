@@ -1,11 +1,10 @@
 import Spinner from './Spinner'
-import { AlertTriangle } from 'lucide-react'
+import { SearchX } from 'lucide-react'
 
-// Table wrapper with loading and empty states
 export default function Table({ columns, data, loading, emptyMessage = 'No data found.', keyField = 'id', onRowClick }) {
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
+      <div className="flex justify-center items-center py-16">
         <Spinner size="lg" />
       </div>
     )
@@ -13,9 +12,9 @@ export default function Table({ columns, data, loading, emptyMessage = 'No data 
 
   if (!data || data.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-400">
-        <AlertTriangle className="h-10 w-10 mx-auto mb-3 opacity-40" />
-        <p className="text-sm">{emptyMessage}</p>
+      <div className="text-center py-16">
+        <SearchX className="h-10 w-10 mx-auto mb-3 text-ink-muted opacity-40" />
+        <p className="text-sm text-ink-muted">{emptyMessage}</p>
       </div>
     )
   }
@@ -32,7 +31,7 @@ export default function Table({ columns, data, loading, emptyMessage = 'No data 
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-100">
+        <tbody className="divide-y divide-line">
           {data.map((row) => (
             <tr
               key={row[keyField]}
