@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
-import { CheckCircle, XCircle, X } from 'lucide-react'
+import { CheckCircle2, XCircle, X } from 'lucide-react'
 
 export default function Toast({ toasts, remove }) {
   return (
-    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
+    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2.5 pointer-events-none max-w-sm w-full">
       {toasts.map((t) => (
         <ToastItem key={t.id} toast={t} onRemove={remove} />
       ))}
@@ -18,20 +18,21 @@ function ToastItem({ toast, onRemove }) {
   }, [toast, onRemove])
 
   const isSuccess = toast.type === 'success'
+
   return (
-    <div className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border max-w-sm w-full transition-all duration-300 ${
-      isSuccess
-        ? 'bg-white border-green-200 text-green-800'
-        : 'bg-white border-red-200 text-red-800'
-    }`}>
+    <div className={`
+      pointer-events-auto flex items-start gap-3 px-4 py-3.5 rounded-xl shadow-card-hover
+      border animate-slide-in bg-surface
+      ${isSuccess ? 'border-success/30' : 'border-danger/30'}
+    `}>
       {isSuccess
-        ? <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-        : <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+        ? <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+        : <XCircle className="h-5 w-5 text-danger flex-shrink-0 mt-0.5" />
       }
-      <p className="text-sm font-medium flex-1">{toast.message}</p>
+      <p className="text-sm font-medium text-ink flex-1 leading-snug">{toast.message}</p>
       <button
         onClick={() => onRemove(toast.id)}
-        className="text-gray-400 hover:text-gray-600"
+        className="text-ink-muted hover:text-ink transition-colors mt-0.5 flex-shrink-0"
         aria-label="Dismiss notification"
       >
         <X className="h-4 w-4" />
