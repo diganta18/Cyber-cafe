@@ -4,7 +4,7 @@ import api from '../api/axios'
 import { formatCurrency, formatDateTime } from '../utils/format'
 import StatCard from '../components/StatCard'
 import Spinner from '../components/Spinner'
-import { Monitor, Clock, DollarSign, Activity, RefreshCw } from 'lucide-react'
+import { Monitor, Clock, DollarSign, Activity, RefreshCw, Circle, ArrowRight } from 'lucide-react'
 
 export default function Dashboard({ toast }) {
   const [stats, setStats] = useState(null)
@@ -35,107 +35,110 @@ export default function Dashboard({ toast }) {
     return () => clearInterval(interval)
   }, [fetchData])
 
-  if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+  if (loading) return (
+    <div className="flex justify-center items-center py-32">
+      <Spinner size="lg" />
+    </div>
+  )
 
-  const statusColor = (s) => {
-    if (s === 'available') return 'bg-green-100 text-green-700'
-    if (s === 'occupied') return 'bg-red-100 text-red-700'
-    return 'bg-gray-100 text-gray-600'
+  const statusConfig = {
+    available:   { dot: 'bg-success',   text: 'text-success' },
+    occupied:    { dot: 'bg-danger',    text: 'text-danger' },
+    maintenance: { dot: 'bg-ink-faint', text: 'text-ink-faint' },
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="page-header">
-        <h1 className="page-title">Dashboard</h1>
-        <button onClick={fetchData} className="btn-ghost" aria-label="Refresh">
-          <RefreshCw className="h-4 w-4" /> Refresh
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="text-sm text-ink-muted mt-0.5">Real-time overview of your cyber cafe</p>
+        </div>
+        <button onClick={fetchData} className="btn-ghost gap-2" aria-label="Refresh">
+          <RefreshCw className="h-4 w-4" />
+          <span className="hidden sm:inline">Refresh</span>
         </button>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          label="Active Sessions"
-          value={stats?.active_sessions ?? 0}
-          icon={Clock}
-          color="blue"
-        />
-        <StatCard
-          label="Available Stations"
-          value={`${stats?.available_stations ?? 0} / ${stats?.total_stations ?? 0}`}
-          icon={Monitor}
-          color="green"
-        />
-        <StatCard
-          label="Today's Revenue"
-          value={formatCurrency(stats?.today_revenue ?? 0)}
-          icon={DollarSign}
-          color="amber"
-        />
-        <StatCard
-          label="Today's Sessions"
-          value={stats?.today_sessions ?? 0}
-          icon={Activity}
-          color="purple"
-        />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Active Sessions"     value={stats?.active_sessions ?? 0}                                          icon={Clock}      color="cyan"  />
+        <StatCard label="Available Stations"  value={`${stats?.available_stations ?? 0} / ${stats?.total_stations ?? 0}`} icon={Monitor}    color="green" />
+        <StatCard label="Today's Revenue"     value={formatCurrency(stats?.today_revenue ?? 0)}                           icon={DollarSign} color="amber" />
+        <StatCard label="Today's Sessions"    value={stats?.today_sessions ?? 0}                                          icon={Activity}   color="red"   />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Station Status Grid */}
         <div className="card p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Station Status</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {stations.map((s) => (
-              <div
-                key={s.id}
-                className={`rounded-lg px-3 py-2 flex items-center justify-between ${
-                  s.status === 'occupied' ? 'bg-red-50' :
-                  s.status === 'available' ? 'bg-green-50' : 'bg-gray-50'
-                }`}
-              >
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{s.name}</p>
-                  <p className="text-xs text-gray-500">{s.type}</p>
-                  {s.active_session && (
-                    <p className="text-xs text-red-600 truncate">{s.active_session.customer_name}</p>
-                  )}
-                </div>
-                <span className={`badge ${statusColor(s.status)} text-xs`}>{s.status}</span>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold text-ink">Station Status</h2>
+            <div className="flex items-center gap-3 text-xs text-ink-muted">
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-success" /> Available</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-danger" /> Occupied</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-ink-faint" /> Maintenance</span>
+            </div>
           </div>
-          <Link to="/stations" className="text-xs text-primary-600 hover:underline mt-4 inline-block">
-            Manage stations →
+
+          <div className="grid grid-cols-2 gap-2">
+            {stations.map((s) => {
+              const cfg = statusConfig[s.status] || statusConfig.maintenance
+              return (
+                <div
+                  key={s.id}
+                  className="rounded-xl p-3 border border-[#DCDAD3] bg-surface-raised flex items-center justify-between gap-2"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Circle className={`h-2 w-2 fill-current ${cfg.text} flex-shrink-0`} />
+                      <p className="text-sm font-semibold text-ink truncate">{s.name}</p>
+                    </div>
+                    <p className="text-xs text-ink-muted ml-4 mt-0.5">{s.type}</p>
+                    {s.active_session && (
+                      <p className="text-xs text-accent ml-4 mt-0.5 truncate">{s.active_session.customer_name}</p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <Link to="/stations" className="mt-4 inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 font-medium transition-colors">
+            Manage stations <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
         {/* Recent Bills */}
         <div className="card p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Paid Bills</h2>
+          <h2 className="text-base font-bold text-ink mb-4">Recent Paid Bills</h2>
+
           {recentBills.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">No bills yet today</p>
+            <div className="text-center py-8">
+              <p className="text-sm text-ink-muted">No paid bills yet today</p>
+            </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {recentBills.map((b) => (
                 <Link
                   key={b.id}
                   to={`/bills/${b.id}`}
-                  className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-surface-raised transition-colors group"
                 >
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{b.bill_no}</p>
-                    <p className="text-xs text-gray-500">{b.customer_name}</p>
+                    <p className="text-sm font-semibold text-ink group-hover:text-accent transition-colors font-mono">{b.bill_no}</p>
+                    <p className="text-xs text-ink-muted">{b.customer_name}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-900">{formatCurrency(b.total)}</p>
-                    <p className="text-xs text-gray-400">{formatDateTime(b.created_at)}</p>
+                    <p className="text-sm font-bold text-success">{formatCurrency(b.total)}</p>
+                    <p className="text-xs text-ink-muted">{formatDateTime(b.created_at)}</p>
                   </div>
                 </Link>
               ))}
             </div>
           )}
-          <Link to="/bills" className="text-xs text-primary-600 hover:underline mt-4 inline-block">
-            View all bills →
+
+          <Link to="/bills" className="mt-4 inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 font-medium transition-colors">
+            View all bills <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>
