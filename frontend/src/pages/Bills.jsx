@@ -61,31 +61,39 @@ export default function Bills({ toast }) {
   const columns = [
     {
       key: 'bill_no', label: 'Bill No.',
-      render: (val) => <span className="font-mono text-sm font-semibold text-gray-800">{val}</span>,
+      render: (val) => <span className="font-mono text-sm font-bold text-ink">{val}</span>,
     },
-    { key: 'customer_name', label: 'Customer' },
-    { key: 'station_name', label: 'Station' },
+    {
+      key: 'customer_name', label: 'Customer',
+      render: (val) => <span className="font-medium text-ink">{val}</span>,
+    },
+    { key: 'station_name', label: 'Station', render: (val) => <span className="text-ink-muted">{val}</span> },
     {
       key: 'total', label: 'Total',
-      render: (val) => <span className="font-semibold">{formatCurrency(val)}</span>,
+      render: (val) => <span className="font-bold text-success">{formatCurrency(val)}</span>,
     },
     {
       key: 'discount', label: 'Discount',
-      render: (val) => val > 0 ? <span className="text-green-600">{formatCurrency(val)}</span> : <span className="text-gray-400">—</span>,
+      render: (val) => val > 0
+        ? <span className="text-warning font-medium">{formatCurrency(val)}</span>
+        : <span className="text-ink-faint">—</span>,
     },
     {
       key: 'status', label: 'Status',
       render: (val) => <span className={`badge badge-${val}`}>{val}</span>,
     },
-    { key: 'created_at', label: 'Date', render: (val) => formatDateTime(val) },
+    {
+      key: 'created_at', label: 'Date',
+      render: (val) => <span className="text-sm text-ink-muted">{formatDateTime(val)}</span>,
+    },
     {
       key: 'id', label: '',
       render: (_, row) => (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {row.status === 'unpaid' && (
             <button
               onClick={(e) => { e.stopPropagation(); setPayModal(row); setPayMode('cash') }}
-              className="btn-primary py-1 px-2 text-xs"
+              className="btn-primary py-1 px-2.5 text-xs"
               aria-label="Pay"
             >
               <CreditCard className="h-3.5 w-3.5" /> Pay
@@ -93,7 +101,7 @@ export default function Bills({ toast }) {
           )}
           <button
             onClick={(e) => { e.stopPropagation(); navigate(`/bills/${row.id}`) }}
-            className="btn-ghost py-1 px-2 text-xs"
+            className="btn-ghost py-1.5 px-2"
             aria-label="Open invoice"
           >
             <ExternalLink className="h-3.5 w-3.5" />
@@ -104,30 +112,37 @@ export default function Bills({ toast }) {
   ]
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="page-header">
-        <h1 className="page-title">Bills</h1>
+        <div>
+          <h1 className="page-title">Bills</h1>
+          <p className="text-sm text-ink-muted mt-0.5">{total} total bills</p>
+        </div>
       </div>
 
-      {/* Status tabs */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {STATUS_TABS.map((s) => (
-          <button
-            key={s}
-            onClick={() => { setStatusFilter(s); setPage(1) }}
-            className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
-              statusFilter === s ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-          </button>
-        ))}
+      {/* Status tabs + search */}
+      <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex gap-1.5 flex-wrap">
+          {STATUS_TABS.map((s) => (
+            <button
+              key={s}
+              onClick={() => { setStatusFilter(s); setPage(1) }}
+              className={`px-3 py-1.5 text-xs rounded-lg font-semibold transition-all duration-150 ${
+                statusFilter === s
+                  ? 'bg-accent/15 text-accent border border-accent/30'
+                  : 'bg-surface-raised border border-line text-ink-muted hover:text-ink hover:border-line/80'
+              }`}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
         <form
           className="flex gap-2 ml-auto"
           onSubmit={(e) => { e.preventDefault(); setSearch(searchInput); setPage(1) }}
         >
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
             <input
               type="text"
               placeholder="Bill no or customer…"
@@ -149,11 +164,11 @@ export default function Bills({ toast }) {
           onRowClick={(row) => navigate(`/bills/${row.id}`)}
         />
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500">{(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} of {total}</p>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-line">
+            <p className="text-xs text-ink-muted">{(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} of {total}</p>
             <div className="flex gap-2">
               <button className="btn-secondary py-1 px-3 text-xs" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-              <span className="text-xs text-gray-500 self-center">{page} / {totalPages}</span>
+              <span className="text-xs text-ink-muted self-center px-2">{page} / {totalPages}</span>
               <button className="btn-secondary py-1 px-3 text-xs" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next →</button>
             </div>
           </div>
@@ -163,9 +178,9 @@ export default function Bills({ toast }) {
       {/* Pay Modal */}
       <Modal isOpen={!!payModal} onClose={() => setPayModal(null)} title={`Record Payment — ${payModal?.bill_no}`} size="sm">
         <div className="space-y-4">
-          <div className="bg-gray-50 rounded-lg p-4 flex justify-between items-center">
-            <span className="text-sm text-gray-500">Amount Due</span>
-            <span className="text-xl font-bold text-gray-900">{formatCurrency(payModal?.total)}</span>
+          <div className="bg-surface-raised border border-line rounded-xl p-4 flex justify-between items-center">
+            <span className="text-sm text-ink-faint font-semibold">Amount Due</span>
+            <span className="text-2xl font-bold text-success">{formatCurrency(payModal?.total)}</span>
           </div>
           <div>
             <label className="label">Payment Mode</label>
