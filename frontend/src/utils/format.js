@@ -1,3 +1,14 @@
+// MySQL with dateStrings:true returns datetime strings like "2026-10-13 19:00:00" (local time).
+// JS Date needs the T separator to parse reliably — the space form can be ambiguous on some browsers.
+function asUTC(dt) {
+  if (!dt) return dt
+  const s = String(dt)
+  // Already has timezone info — leave as-is
+  if (/Z$|[+-]\d{2}:\d{2}$/.test(s)) return s
+  // Just normalize the MySQL space separator to T (no Z — times are already local)
+  return s.replace(' ', 'T')
+}
+
 // Format currency as ₹1,234.50
 export function formatCurrency(amount) {
   if (amount == null) return '—'
@@ -12,7 +23,7 @@ export function formatCurrency(amount) {
 // Format datetime in local timezone: 06 Oct 2026, 08:30 AM
 export function formatDateTime(dt) {
   if (!dt) return '—'
-  return new Date(dt).toLocaleString('en-IN', {
+  return new Date(asUTC(dt)).toLocaleString('en-IN', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -25,7 +36,7 @@ export function formatDateTime(dt) {
 // Format date only: 06 Oct 2026
 export function formatDate(dt) {
   if (!dt) return '—'
-  return new Date(dt).toLocaleDateString('en-IN', {
+  return new Date(asUTC(dt)).toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -45,9 +56,9 @@ export function formatDuration(minutes) {
 // Elapsed time from start to now, in seconds
 export function elapsedSeconds(startTime, serverTimeIso) {
   const now = Date.now()
-  const serverNow = serverTimeIso ? new Date(serverTimeIso).getTime() : now
+  const serverNow = serverTimeIso ? new Date(asUTC(serverTimeIso)).getTime() : now
   const offset = now - serverNow   // client ahead = positive
-  const start = new Date(startTime).getTime()
+  const start = new Date(asUTC(startTime)).getTime()
   return Math.floor((now - offset - start) / 1000)
 }
 
