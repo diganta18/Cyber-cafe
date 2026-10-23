@@ -5,7 +5,7 @@ import Table from '../components/Table'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Spinner from '../components/Spinner'
-import { Plus, Pencil, Archive, ToggleLeft, ToggleRight, Search } from 'lucide-react'
+import { Plus, Pencil, ToggleLeft, ToggleRight, Search, Package } from 'lucide-react'
 
 export default function Services({ toast }) {
   const [services, setServices] = useState([])
@@ -24,7 +24,7 @@ export default function Services({ toast }) {
 
   const fetchServices = useCallback(async () => {
     try {
-      const res = await api.get('/services?limit=100&active=all')
+      const res = await api.get('/services')
       setServices(res.data.data)
     } catch (err) {
       toast.error(apiError(err))
@@ -81,8 +81,11 @@ export default function Services({ toast }) {
 
   const handleToggleActive = async () => {
     try {
-      const endpoint = confirmTarget.is_active ? 'deactivate' : 'activate'
-      await api.patch(`/services/${confirmTarget.id}/${endpoint}`)
+      if (confirmTarget.is_active) {
+        await api.delete(`/services/${confirmTarget.id}`)
+      } else {
+        await api.put(`/services/${confirmTarget.id}`, { is_active: 1 })
+      }
       toast.success(`Service ${confirmTarget.is_active ? 'deactivated' : 'activated'}`)
       fetchServices()
     } catch (err) {
@@ -93,42 +96,53 @@ export default function Services({ toast }) {
   }
 
   const filtered = services.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.category.toLowerCase().includes(search.toLowerCase())
+    s.name.toLowerCase().includes(search.toLowerCase())
   )
 
   const columns = [
-    { key: 'name', label: 'Service Name', render: (val) => <span className="font-medium">{val}</span> },
-    { key: 'category', label: 'Category', render: (val) => <span className="badge badge-PC capitalize">{val}</span> },
-    { key: 'unit', label: 'Unit' },
-    { key: 'price', label: 'Price', render: (val) => formatCurrency(val) },
+    {
+      key: 'name', label: 'Service Name',
+      render: (val) => (
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-surface-raised border border-line flex items-center justify-center flex-shrink-0">
+            <Package className="h-4 w-4 text-ink-muted" />
+          </div>
+          <span className="font-semibold text-ink">{val}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'category', label: 'Category',
+      render: (val) => <span className="badge badge-PC capitalize">{val}</span>,
+    },
+    { key: 'unit', label: 'Unit', render: (val) => <span className="text-ink-muted text-sm">{val}</span> },
+    {
+      key: 'price', label: 'Price',
+      render: (val) => <span className="font-bold text-ink font-mono">{formatCurrency(val)}</span>,
+    },
     {
       key: 'track_stock', label: 'Stock',
       render: (val, row) => val
-        ? <span className={`font-mono text-sm ${row.stock_qty <= 5 ? 'text-red-600 font-bold' : 'text-gray-700'}`}>{row.stock_qty}</span>
-        : <span className="text-gray-400 text-xs">Unlimited</span>
+        ? <span className={`font-mono text-sm font-bold ${row.stock_qty <= 5 ? 'text-danger' : 'text-ink'}`}>{row.stock_qty}</span>
+        : <span className="text-ink-faint text-xs">Unlimited</span>,
     },
     {
       key: 'is_active', label: 'Status',
       render: (val) => val
         ? <span className="badge badge-available">Active</span>
-        : <span className="badge badge-void">Inactive</span>
+        : <span className="badge badge-void">Inactive</span>,
     },
     {
       key: 'id', label: '',
       render: (_, row) => (
-        <div className="flex items-center gap-1">
-          <button onClick={() => openEdit(row)} className="btn-ghost py-1 px-2 text-xs" aria-label={`Edit ${row.name}`}>
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => openEdit(row)} className="btn-ghost py-1.5 px-2" aria-label={`Edit ${row.name}`}>
             <Pencil className="h-3.5 w-3.5" />
           </button>
-          <button
-            onClick={() => setConfirmTarget(row)}
-            className="btn-ghost py-1 px-2 text-xs"
-            aria-label={row.is_active ? 'Deactivate' : 'Activate'}
-          >
+          <button onClick={() => setConfirmTarget(row)} className="btn-ghost py-1.5 px-2" aria-label={row.is_active ? 'Deactivate' : 'Activate'}>
             {row.is_active
-              ? <ToggleRight className="h-4 w-4 text-green-600" />
-              : <ToggleLeft className="h-4 w-4 text-gray-400" />}
+              ? <ToggleRight className="h-4 w-4 text-success" />
+              : <ToggleLeft className="h-4 w-4 text-ink-faint" />}
           </button>
         </div>
       ),
@@ -136,31 +150,26 @@ export default function Services({ toast }) {
   ]
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="page-header">
-        <h1 className="page-title">Services & Stock</h1>
+        <div>
+          <h1 className="page-title">Services & Stock</h1>
+          <p className="text-sm text-ink-muted mt-0.5">{services.length} services configured</p>
+        </div>
         <button id="create-service-btn" className="btn-primary" onClick={openCreate}>
           <Plus className="h-4 w-4" /> New Service
         </button>
       </div>
 
-      <div className="mb-4">
-        <div className="relative w-60">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            className="input pl-9"
-            placeholder="Search services…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      <div className="relative w-64">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
+        <input className="input pl-9" placeholder="Search services…" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       <div className="card">
         <Table columns={columns} data={filtered} loading={loading} emptyMessage="No services found." />
       </div>
 
-      {/* Form Modal */}
       <Modal isOpen={modal === 'form'} onClose={() => setModal(null)} title={editing ? 'Edit Service' : 'New Service'} size="sm">
         <div className="space-y-4">
           <div>
@@ -185,9 +194,9 @@ export default function Services({ toast }) {
             <input type="number" min="0" step="0.5" className={`input ${formErrors.price ? 'input-error' : ''}`} placeholder="5.00" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
             {formErrors.price && <p className="error-text">{formErrors.price}</p>}
           </div>
-          <div className="flex items-center gap-3">
-            <input type="checkbox" id="track-stock" checked={form.track_stock} onChange={(e) => setForm({ ...form, track_stock: e.target.checked })} className="h-4 w-4 rounded border-gray-300 text-primary-600" />
-            <label htmlFor="track-stock" className="text-sm text-gray-700 cursor-pointer">Track stock quantity</label>
+          <div className="flex items-center gap-3 py-1">
+            <input type="checkbox" id="track-stock" checked={form.track_stock} onChange={(e) => setForm({ ...form, track_stock: e.target.checked })} className="h-4 w-4 rounded border-line bg-surface-raised accent-accent" />
+            <label htmlFor="track-stock" className="text-sm text-ink-muted cursor-pointer">Track stock quantity</label>
           </div>
           {form.track_stock && (
             <div>
