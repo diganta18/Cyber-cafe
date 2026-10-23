@@ -6,7 +6,7 @@ import Table from '../components/Table'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Spinner from '../components/Spinner'
-import { Plus, Pencil, Wrench, ToggleRight, Search } from 'lucide-react'
+import { Plus, Pencil, Wrench, Search, Monitor } from 'lucide-react'
 
 const STATUS_OPTIONS = ['available', 'occupied', 'maintenance']
 const TYPE_OPTIONS = ['PC', 'Gaming', 'Cabin']
@@ -20,7 +20,7 @@ export default function Stations({ toast }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
 
-  const [modal, setModal] = useState(null) // null | 'create' | 'edit'
+  const [modal, setModal] = useState(null)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', type: 'PC', hourly_rate: '', status: 'available' })
   const [formErrors, setFormErrors] = useState({})
@@ -98,7 +98,7 @@ export default function Stations({ toast }) {
   const handleConfirm = async () => {
     const next = actionTarget.status === 'maintenance' ? 'available' : 'maintenance'
     try {
-      await api.put(`/stations/${actionTarget.id}`, { status: next })
+      await api.patch(`/stations/${actionTarget.id}/status`, { status: next })
       toast.success(`Station set to ${next}`)
       fetchStations()
     } catch (err) {
@@ -115,33 +115,45 @@ export default function Stations({ toast }) {
     return matchSearch && matchFilter
   })
 
+  const filterOptions = ['all', ...STATUS_OPTIONS]
+
   const columns = [
-    { key: 'name', label: 'Station Name' },
+    {
+      key: 'name', label: 'Station Name',
+      render: (val) => (
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-surface-raised border border-line flex items-center justify-center flex-shrink-0">
+            <Monitor className="h-4 w-4 text-ink-muted" />
+          </div>
+          <span className="font-semibold text-ink">{val}</span>
+        </div>
+      ),
+    },
     {
       key: 'type', label: 'Type',
-      render: (val) => <span className={`badge badge-${val}`}>{val}</span>
+      render: (val) => <span className={`badge badge-${val}`}>{val}</span>,
     },
     {
       key: 'hourly_rate', label: 'Rate/hr',
-      render: (val) => <span className="font-mono text-sm">{formatCurrency(val)}</span>
+      render: (val) => <span className="font-mono text-sm text-accent font-semibold">{formatCurrency(val)}</span>,
     },
     {
       key: 'status', label: 'Status',
-      render: (val) => <span className={`badge badge-${val}`}>{val}</span>
+      render: (val) => <span className={`badge badge-${val}`}>{val}</span>,
     },
     {
       key: 'active_session', label: 'Current User',
-      render: (val) => val ? (
-        <span className="text-sm text-gray-700">{val.customer_name}</span>
-      ) : <span className="text-gray-400 text-sm">—</span>
+      render: (val) => val
+        ? <span className="text-sm text-ink font-medium">{val.customer_name}</span>
+        : <span className="text-ink-faint text-sm">—</span>,
     },
-    {
+    ...(isAdmin ? [{
       key: 'id', label: '',
-      render: (_, row) => isAdmin ? (
-        <div className="flex items-center gap-2">
+      render: (_, row) => (
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => openEdit(row)}
-            className="btn-ghost py-1 px-2 text-xs"
+            className="btn-ghost py-1.5 px-2 text-xs"
             disabled={row.status === 'occupied'}
             aria-label={`Edit ${row.name}`}
           >
@@ -150,21 +162,24 @@ export default function Stations({ toast }) {
           {row.status !== 'occupied' && (
             <button
               onClick={() => handleToggleStatus(row)}
-              className="btn-ghost py-1 px-2 text-xs"
+              className="btn-ghost py-1.5 px-2 text-xs"
               aria-label={`Toggle maintenance for ${row.name}`}
             >
               <Wrench className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
-      ) : null
-    },
+      ),
+    }] : []),
   ]
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="page-header">
-        <h1 className="page-title">Stations</h1>
+        <div>
+          <h1 className="page-title">Stations</h1>
+          <p className="text-sm text-ink-muted mt-0.5">{stations.length} total stations</p>
+        </div>
         {isAdmin && (
           <button id="create-station-btn" className="btn-primary" onClick={openCreate}>
             <Plus className="h-4 w-4" /> New Station
@@ -173,9 +188,9 @@ export default function Stations({ toast }) {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 mb-4 flex-wrap">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <div className="flex gap-3 flex-wrap items-center">
+        <div className="relative flex-shrink-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
           <input
             type="text"
             placeholder="Search stations…"
@@ -184,26 +199,25 @@ export default function Stations({ toast }) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        {STATUS_OPTIONS.concat('all').map((s) => (
-          <button
-            key={s}
-            onClick={() => setFilter(s)}
-            className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
-              filter === s ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-          </button>
-        ))}
+        <div className="flex gap-1.5 flex-wrap">
+          {filterOptions.map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={`px-3 py-1.5 text-xs rounded-lg font-semibold transition-all duration-150 ${
+                filter === s
+                  ? 'bg-accent/15 text-accent border border-accent/30'
+                  : 'bg-surface-raised border border-line text-ink-muted hover:text-ink hover:border-line/80'
+              }`}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="card">
-        <Table
-          columns={columns}
-          data={filtered}
-          loading={loading}
-          emptyMessage="No stations match your filter."
-        />
+        <Table columns={columns} data={filtered} loading={loading} emptyMessage="No stations match your filter." />
       </div>
 
       {/* Create/Edit Modal */}
@@ -227,20 +241,14 @@ export default function Stations({ toast }) {
           </div>
           <div>
             <label className="label">Type *</label>
-            <select
-              className="input"
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-            >
+            <select className="input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
               {TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div>
             <label className="label">Hourly Rate (₹) *</label>
             <input
-              type="number"
-              min="1"
-              step="0.5"
+              type="number" min="1" step="0.5"
               className={`input ${formErrors.hourly_rate ? 'input-error' : ''}`}
               placeholder="60"
               value={form.hourly_rate}
