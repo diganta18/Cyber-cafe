@@ -5,7 +5,7 @@ import Table from '../components/Table'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Spinner from '../components/Spinner'
-import { Plus, Pencil, Trash2, ShieldCheck, ShieldOff } from 'lucide-react'
+import { Plus, Pencil, Trash2, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function Staff({ toast }) {
@@ -105,40 +105,53 @@ export default function Staff({ toast }) {
     {
       key: 'name', label: 'Name',
       render: (val, row) => (
-        <span className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-full bg-primary-100 text-primary-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-surface-raised border border-line text-ink-muted text-xs font-bold flex items-center justify-center flex-shrink-0">
             {val.charAt(0).toUpperCase()}
           </div>
-          <span className="font-medium">{val} {row.id === me?.id ? <span className="text-xs text-gray-400">(you)</span> : null}</span>
-        </span>
-      )
+          <div>
+            <span className="font-semibold text-ink">{val}</span>
+            {row.id === me?.id && <span className="ml-2 text-xs text-ink-muted font-medium">(you)</span>}
+          </div>
+        </div>
+      ),
     },
-    { key: 'username', label: 'Username', render: (val) => <span className="font-mono text-sm">{val}</span> },
+    {
+      key: 'username', label: 'Username',
+      render: (val) => <span className="font-mono text-sm text-ink-muted">{val}</span>,
+    },
     {
       key: 'role', label: 'Role',
       render: (val) => val === 'admin'
-        ? <span className="badge bg-purple-100 text-purple-700 flex items-center gap-1 w-fit"><ShieldCheck className="h-3 w-3" /> Admin</span>
-        : <span className="badge badge-available">Staff</span>
+        ? <span className="badge bg-surface-raised text-ink-muted ring-1 ring-line flex items-center gap-1 w-fit"><ShieldCheck className="h-3 w-3" /> Admin</span>
+        : <span className="badge badge-available">Staff</span>,
     },
     {
       key: 'id', label: '',
       render: (_, row) => row.id !== me?.id ? (
-        <div className="flex items-center gap-1">
-          <button onClick={() => openEdit(row)} className="btn-ghost py-1 px-2 text-xs" aria-label={`Edit ${row.name}`}>
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => openEdit(row)} className="btn-ghost py-1.5 px-2" aria-label={`Edit ${row.name}`}>
             <Pencil className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => openDelete(row)} className="btn-ghost py-1 px-2 text-xs text-red-500 hover:text-red-700" aria-label={`Delete ${row.name}`}>
+          <button
+            onClick={() => openDelete(row)}
+            className="btn-ghost py-1.5 px-2 text-ink-muted hover:bg-danger/10 hover:text-danger"
+            aria-label={`Delete ${row.name}`}
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
-      ) : null
+      ) : null,
     },
   ]
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="page-header">
-        <h1 className="page-title">Staff Management</h1>
+        <div>
+          <h1 className="page-title">Staff Management</h1>
+          <p className="text-sm text-ink-muted mt-0.5">{users.length} team members</p>
+        </div>
         <button id="create-staff-btn" className="btn-primary" onClick={openCreate}>
           <Plus className="h-4 w-4" /> Add Staff
         </button>
