@@ -31,14 +31,15 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px]"
       onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       <div className={`
-        bg-surface border border-line rounded-2xl shadow-card-hover
+        bg-surface border border-line rounded-2xl
+        shadow-[0_24px_48px_-8px_rgba(24,24,27,0.18),0_0_0_1px_rgba(24,24,27,0.04)]
         w-full ${sizes[size]} max-h-[90vh] flex flex-col
         animate-fade-up
       `}>
