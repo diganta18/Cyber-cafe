@@ -61,21 +61,21 @@ export default function Bills({ toast }) {
   const columns = [
     {
       key: 'bill_no', label: 'Bill No.',
-      render: (val) => <span className="font-mono text-sm font-bold text-ink">{val}</span>,
+      render: (val) => <span className="font-mono text-sm font-bold text-ink tracking-tight">{val}</span>,
     },
     {
       key: 'customer_name', label: 'Customer',
-      render: (val) => <span className="font-medium text-ink">{val}</span>,
+      render: (val) => <span className="font-semibold text-ink">{val}</span>,
     },
-    { key: 'station_name', label: 'Station', render: (val) => <span className="text-ink-muted">{val}</span> },
+    { key: 'station_name', label: 'Station', render: (val) => <span className="text-sm text-ink-muted">{val}</span> },
     {
       key: 'total', label: 'Total',
-      render: (val) => <span className="font-bold text-success">{formatCurrency(val)}</span>,
+      render: (val) => <span className="font-bold text-success font-mono">{formatCurrency(val)}</span>,
     },
     {
       key: 'discount', label: 'Discount',
       render: (val) => val > 0
-        ? <span className="text-warning font-medium">{formatCurrency(val)}</span>
+        ? <span className="text-warning font-semibold font-mono text-sm">{formatCurrency(val)}</span>
         : <span className="text-ink-faint">—</span>,
     },
     {
@@ -84,7 +84,7 @@ export default function Bills({ toast }) {
     },
     {
       key: 'created_at', label: 'Date',
-      render: (val) => <span className="text-sm text-ink-muted">{formatDateTime(val)}</span>,
+      render: (val) => <span className="text-xs text-ink-faint">{formatDateTime(val)}</span>,
     },
     {
       key: 'id', label: '',
@@ -116,21 +116,21 @@ export default function Bills({ toast }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Bills</h1>
-          <p className="text-sm text-ink-muted mt-0.5">{total} total bills</p>
+          <p className="text-sm text-ink-muted mt-1">{total} total bills</p>
         </div>
       </div>
 
       {/* Status tabs + search */}
-      <div className="flex gap-2 flex-wrap items-center">
-        <div className="flex gap-1.5 flex-wrap">
+      <div className="flex gap-3 flex-wrap items-center">
+        <div className="flex gap-1.5 flex-wrap bg-surface-raised border border-line rounded-lg p-1">
           {STATUS_TABS.map((s) => (
             <button
               key={s}
               onClick={() => { setStatusFilter(s); setPage(1) }}
-              className={`px-3 py-1.5 text-xs rounded-lg font-semibold transition-all duration-150 ${
+              className={`px-3 py-1.5 text-xs rounded-md font-semibold transition-all duration-150 ${
                 statusFilter === s
-                  ? 'bg-accent/15 text-accent border border-accent/30'
-                  : 'bg-surface-raised border border-line text-ink-muted hover:text-ink hover:border-line/80'
+                  ? 'bg-surface shadow-[0_1px_3px_rgba(24,24,27,0.08)] text-ink'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -164,11 +164,11 @@ export default function Bills({ toast }) {
           onRowClick={(row) => navigate(`/bills/${row.id}`)}
         />
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-line">
-            <p className="text-xs text-ink-muted">{(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} of {total}</p>
-            <div className="flex gap-2">
+          <div className="flex items-center justify-between px-5 py-3.5 border-t border-line">
+            <p className="text-xs text-ink-faint">{(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} of {total}</p>
+            <div className="flex items-center gap-2">
               <button className="btn-secondary py-1 px-3 text-xs" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-              <span className="text-xs text-ink-muted self-center px-2">{page} / {totalPages}</span>
+              <span className="text-xs text-ink-muted px-1">{page} / {totalPages}</span>
               <button className="btn-secondary py-1 px-3 text-xs" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next →</button>
             </div>
           </div>
@@ -178,9 +178,9 @@ export default function Bills({ toast }) {
       {/* Pay Modal */}
       <Modal isOpen={!!payModal} onClose={() => setPayModal(null)} title={`Record Payment — ${payModal?.bill_no}`} size="sm">
         <div className="space-y-4">
-          <div className="bg-surface-raised border border-line rounded-xl p-4 flex justify-between items-center">
-            <span className="text-sm text-ink-faint font-semibold">Amount Due</span>
-            <span className="text-2xl font-bold text-success">{formatCurrency(payModal?.total)}</span>
+          <div className="bg-surface-raised border border-line rounded-xl p-5 flex justify-between items-center">
+            <span className="text-sm text-ink-muted font-semibold">Amount Due</span>
+            <span className="text-3xl font-bold text-success font-mono">{formatCurrency(payModal?.total)}</span>
           </div>
           <div>
             <label className="label">Payment Mode</label>

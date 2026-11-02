@@ -5,7 +5,7 @@ import Table from '../components/Table'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Spinner from '../components/Spinner'
-import { Plus, Pencil, Trash2, ShieldCheck } from 'lucide-react'
+import { Plus, Pencil, Trash2, ShieldCheck, UserCog } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function Staff({ toast }) {
@@ -106,24 +106,26 @@ export default function Staff({ toast }) {
       key: 'name', label: 'Name',
       render: (val, row) => (
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-surface-raised border border-line text-ink-muted text-xs font-bold flex items-center justify-center flex-shrink-0">
+          <div className={`h-8 w-8 rounded-lg text-xs font-bold flex items-center justify-center flex-shrink-0 ${
+            row.role === 'admin' ? 'bg-accent/10 border border-accent/20 text-accent' : 'bg-surface-raised border border-line text-ink-muted'
+          }`}>
             {val.charAt(0).toUpperCase()}
           </div>
           <div>
             <span className="font-semibold text-ink">{val}</span>
-            {row.id === me?.id && <span className="ml-2 text-xs text-ink-muted font-medium">(you)</span>}
+            {row.id === me?.id && <span className="ml-2 text-[11px] text-ink-faint font-medium bg-surface-raised border border-line rounded px-1.5 py-0.5">you</span>}
           </div>
         </div>
       ),
     },
     {
       key: 'username', label: 'Username',
-      render: (val) => <span className="font-mono text-sm text-ink-muted">{val}</span>,
+      render: (val) => <span className="font-mono text-sm text-ink-muted">@{val}</span>,
     },
     {
       key: 'role', label: 'Role',
       render: (val) => val === 'admin'
-        ? <span className="badge bg-surface-raised text-ink-muted ring-1 ring-line flex items-center gap-1 w-fit"><ShieldCheck className="h-3 w-3" /> Admin</span>
+        ? <span className="badge bg-accent/10 text-accent ring-1 ring-inset ring-accent/20 flex items-center gap-1 w-fit"><ShieldCheck className="h-3 w-3" /> Admin</span>
         : <span className="badge badge-available">Staff</span>,
     },
     {
@@ -150,7 +152,7 @@ export default function Staff({ toast }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Staff Management</h1>
-          <p className="text-sm text-ink-muted mt-0.5">{users.length} team members</p>
+          <p className="text-sm text-ink-muted mt-1">{users.length} team member{users.length !== 1 ? 's' : ''}</p>
         </div>
         <button id="create-staff-btn" className="btn-primary" onClick={openCreate}>
           <Plus className="h-4 w-4" /> Add Staff

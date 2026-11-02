@@ -31,26 +31,27 @@ export default function Login({ toast }) {
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Subtle background accent */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+      {/* Background decorations */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/[0.04] rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-warning/[0.03] rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-sm relative z-10 animate-fade-up">
+      <div className="w-full max-w-[360px] relative z-10 animate-fade-up">
         {/* Logo / Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-accent mb-5 shadow-card">
-            <Zap className="h-7 w-7 text-white" />
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-accent mb-5 shadow-[0_8px_24px_-4px_rgba(59,122,87,0.4)]">
+            <Zap className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-ink tracking-tight">CyberCafe</h1>
-          <p className="text-accent font-semibold text-sm tracking-widest uppercase mt-0.5">Manager Pro</p>
-          <p className="text-ink-muted text-sm mt-2">Sign in to your workspace</p>
+          <h1 className="text-[28px] font-bold text-ink tracking-tight leading-tight">CyberCafe</h1>
+          <p className="text-accent font-bold text-[11px] tracking-[0.2em] uppercase mt-1">Manager Pro</p>
+          <p className="text-ink-muted text-sm mt-2.5">Sign in to your workspace</p>
         </div>
 
         {/* Card */}
-        <div className="card p-8">
+        <div className="card p-7 shadow-[0_16px_40px_-8px_rgba(24,24,27,0.12)]">
           {/* Security badge */}
-          <div className="flex items-center gap-2 bg-accent/10 border border-accent/20 rounded-lg px-3 py-2 mb-6">
+          <div className="flex items-center gap-2 bg-accent/8 border border-accent/15 rounded-lg px-3 py-2 mb-6">
             <Shield className="h-3.5 w-3.5 text-accent flex-shrink-0" />
-            <span className="text-xs text-accent font-medium">Secure admin access</span>
+            <span className="text-xs text-accent font-semibold">Secure admin access</span>
           </div>
 
           <form onSubmit={handleSubmit} noValidate>
@@ -92,7 +93,7 @@ export default function Login({ toast }) {
             </div>
 
             {error && (
-              <div className="mb-4 px-3 py-2.5 bg-danger/10 border border-danger/20 rounded-lg text-sm text-danger flex items-center gap-2">
+              <div className="mb-5 px-3 py-2.5 bg-danger/8 border border-danger/20 rounded-lg text-sm text-danger flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-danger flex-shrink-0" />
                 {error}
               </div>
@@ -101,7 +102,7 @@ export default function Login({ toast }) {
             <button
               type="submit"
               id="login-submit"
-              className="btn-primary w-full justify-center py-2.5 text-base"
+              className="btn-primary w-full justify-center py-2.5 text-[15px]"
               disabled={loading}
             >
               {loading ? <Spinner size="sm" /> : null}
@@ -110,8 +111,8 @@ export default function Login({ toast }) {
           </form>
         </div>
 
-        <p className="text-center text-xs text-ink-muted mt-6">
-          Cyber Café Management System &copy; {new Date().getFullYear()}
+        <p className="text-center text-xs text-ink-faint mt-6">
+          Cyber Café Management System © {new Date().getFullYear()}
         </p>
       </div>
     </div>

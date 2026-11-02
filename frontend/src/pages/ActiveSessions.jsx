@@ -12,7 +12,7 @@ function LiveTimer({ startTime }) {
     const id = setInterval(() => setSecs(elapsedSeconds(startTime)), 1000)
     return () => clearInterval(id)
   }, [startTime])
-  return <span className="font-mono text-accent font-bold text-lg tabular-nums">{formatTimer(secs)}</span>
+  return <span className="font-mono text-accent font-bold text-xl tabular-nums tracking-tight">{formatTimer(secs)}</span>
 }
 
 export default function ActiveSessions({ toast }) {
@@ -154,7 +154,12 @@ export default function ActiveSessions({ toast }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Active Sessions</h1>
-          <p className="text-sm text-ink-muted mt-0.5">{sessions.length} session{sessions.length !== 1 ? 's' : ''} live</p>
+          <p className="text-sm text-ink-muted mt-1">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+              {sessions.length} session{sessions.length !== 1 ? 's' : ''} live
+            </span>
+          </p>
         </div>
         <div className="flex gap-2">
           <button onClick={fetchSessions} className="btn-ghost" aria-label="Refresh">
@@ -171,10 +176,10 @@ export default function ActiveSessions({ toast }) {
       ) : sessions.length === 0 ? (
         <div className="card p-16 text-center">
           <div className="h-16 w-16 rounded-2xl bg-surface-raised border border-line flex items-center justify-center mx-auto mb-4">
-            <Clock className="h-8 w-8 text-ink-muted" />
+            <Clock className="h-7 w-7 text-ink-faint" />
           </div>
-          <p className="text-ink font-semibold mb-1">No active sessions</p>
-          <p className="text-sm text-ink-muted mb-5">Start a session to get the clock running</p>
+          <p className="text-ink font-bold mb-1.5">No active sessions</p>
+          <p className="text-sm text-ink-muted mb-6">Start a session to get the clock running</p>
           <button onClick={openStart} className="btn-primary mx-auto">
             <Plus className="h-4 w-4" /> Start First Session
           </button>
@@ -182,35 +187,35 @@ export default function ActiveSessions({ toast }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {sessions.map((sess) => (
-            <div key={sess.id} className="card p-5 flex flex-col gap-4 border-l-4 border-l-accent hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
+            <div key={sess.id} className="card p-5 flex flex-col gap-4 border-l-[3px] border-l-accent hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
               {/* Header */}
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="badge badge-active text-xs">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="badge badge-active text-[10px] font-bold tracking-wider">
                       <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse mr-1" />
                       LIVE
                     </span>
-                    <span className="text-xs font-semibold text-ink-muted">{sess.station_name}</span>
+                    <span className="text-[11px] font-semibold text-ink-muted">{sess.station_name}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-lg bg-surface-raised border border-line flex items-center justify-center flex-shrink-0">
-                      <User className="h-3.5 w-3.5 text-ink-muted" />
+                    <div className="h-7 w-7 rounded-lg bg-surface-raised border border-line flex items-center justify-center flex-shrink-0 text-ink-faint font-bold text-xs">
+                      {sess.customer_name?.charAt(0).toUpperCase()}
                     </div>
                     <p className="font-bold text-ink truncate">{sess.customer_name}</p>
                   </div>
-                  {sess.customer_phone && <p className="text-xs text-ink-muted mt-0.5 ml-9">{sess.customer_phone}</p>}
+                  {sess.customer_phone && <p className="text-xs text-ink-faint mt-0.5 ml-9">{sess.customer_phone}</p>}
                 </div>
                 <div className="text-right flex-shrink-0">
                   <LiveTimer startTime={sess.start_time} />
-                  <p className="text-xs text-ink-muted mt-0.5">{formatCurrency(sess.hourly_rate)}/hr</p>
+                  <p className="text-[11px] text-ink-faint mt-1">{formatCurrency(sess.hourly_rate)}/hr</p>
                 </div>
               </div>
 
               {/* Services */}
               {sess.services && sess.services.length > 0 && (
                 <div className="bg-surface-raised border border-line rounded-lg p-3 space-y-2">
-                  <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-1.5">Services</p>
+                  <p className="text-[10px] font-bold text-ink-faint uppercase tracking-[0.12em] mb-2">Services</p>
                   {sess.services.map((sv) => (
                     <div key={sv.id} className="flex items-center justify-between">
                       <span className="text-xs text-ink-muted">{sv.name} × {sv.quantity}</span>
@@ -218,7 +223,7 @@ export default function ActiveSessions({ toast }) {
                         <span className="text-xs font-semibold text-ink">{formatCurrency(sv.line_total)}</span>
                         <button
                           onClick={() => handleRemoveService(sess.id, sv.id)}
-                          className="text-ink-faint hover:text-danger transition-colors"
+                          className="text-ink-faint hover:text-danger transition-colors p-0.5 rounded"
                           aria-label="Remove service"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -230,11 +235,11 @@ export default function ActiveSessions({ toast }) {
               )}
 
               {/* Actions */}
-              <div className="flex gap-2">
-                <button onClick={() => openAddService(sess)} className="btn-secondary flex-1 justify-center text-xs">
+              <div className="flex gap-2 mt-auto">
+                <button onClick={() => openAddService(sess)} className="btn-secondary flex-1 justify-center text-xs py-2">
                   <Plus className="h-3.5 w-3.5" /> Add Service
                 </button>
-                <button id={`end-session-${sess.id}`} onClick={() => openEnd(sess)} className="btn-danger flex-1 justify-center text-xs">
+                <button id={`end-session-${sess.id}`} onClick={() => openEnd(sess)} className="btn-danger flex-1 justify-center text-xs py-2">
                   <StopCircle className="h-3.5 w-3.5" /> End & Bill
                 </button>
               </div>

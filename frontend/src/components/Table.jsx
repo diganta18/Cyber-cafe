@@ -4,7 +4,7 @@ import { SearchX } from 'lucide-react'
 export default function Table({ columns, data, loading, emptyMessage = 'No data found.', keyField = 'id', onRowClick }) {
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-16">
+      <div className="flex justify-center items-center py-20">
         <Spinner size="lg" />
       </div>
     )
@@ -12,9 +12,11 @@ export default function Table({ columns, data, loading, emptyMessage = 'No data 
 
   if (!data || data.length === 0) {
     return (
-      <div className="text-center py-16">
-        <SearchX className="h-10 w-10 mx-auto mb-3 text-ink-muted opacity-40" />
-        <p className="text-sm text-ink-muted">{emptyMessage}</p>
+      <div className="text-center py-20 px-6">
+        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-surface-raised border border-line mb-4">
+          <SearchX className="h-6 w-6 text-ink-faint" />
+        </div>
+        <p className="text-sm font-medium text-ink-muted">{emptyMessage}</p>
       </div>
     )
   }
@@ -31,7 +33,7 @@ export default function Table({ columns, data, loading, emptyMessage = 'No data 
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-line">
+        <tbody>
           {data.map((row) => (
             <tr
               key={row[keyField]}

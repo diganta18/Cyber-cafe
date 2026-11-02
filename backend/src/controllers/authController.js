@@ -23,26 +23,27 @@ async function login(req, res, next) {
       return fail(res, 'Invalid credentials', 401);
     }
     const payload = { id: user.id, username: user.username, role: user.role, name: user.name };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '8h',
-    });
-    return ok(res, { token, user: payload });
-  } catch (err) {
-    next(err);
+      const jwtSecret = process.env.JWT_SECRET || 'cybercafe_jwt_secret_fallback_key';
+      const token = jwt.sign(payload, jwtSecret, {
+        expiresIn: process.env.JWT_EXPIRES_IN || '8h',
+      });
+      return ok(res, { token, user: payload });
+    } catch (err) {
+      next(err);
+    }
   }
-}
 
 async function me(req, res, next) {
-  try {
-    const [rows] = await pool.query(
-      'SELECT id, name, username, role FROM users WHERE id = ? AND is_active = 1',
-      [req.user.id]
-    );
-    if (rows.length === 0) return fail(res, 'User not found', 404);
-    return ok(res, rows[0]);
-  } catch (err) {
-    next(err);
+    try {
+      const [rows] = await pool.query(
+        'SELECT id, name, username, role FROM users WHERE id = ? AND is_active = 1',
+        [req.user.id]
+      );
+      if (rows.length === 0) return fail(res, 'User not found', 404);
+      return ok(res, rows[0]);
+    } catch (err) {
+      next(err);
+    }
   }
-}
 
-module.exports = { login, me };
+  module.exports = { login, me };

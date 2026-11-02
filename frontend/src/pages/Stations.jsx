@@ -123,7 +123,7 @@ export default function Stations({ toast }) {
       render: (val) => (
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-surface-raised border border-line flex items-center justify-center flex-shrink-0">
-            <Monitor className="h-4 w-4 text-ink-muted" />
+            <Monitor className="h-4 w-4 text-ink-faint" />
           </div>
           <span className="font-semibold text-ink">{val}</span>
         </div>
@@ -135,7 +135,7 @@ export default function Stations({ toast }) {
     },
     {
       key: 'hourly_rate', label: 'Rate/hr',
-      render: (val) => <span className="font-mono text-sm text-accent font-semibold">{formatCurrency(val)}</span>,
+      render: (val) => <span className="font-mono text-sm text-accent font-bold">{formatCurrency(val)}</span>,
     },
     {
       key: 'status', label: 'Status',
@@ -178,7 +178,7 @@ export default function Stations({ toast }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Stations</h1>
-          <p className="text-sm text-ink-muted mt-0.5">{stations.length} total stations</p>
+          <p className="text-sm text-ink-muted mt-1">{stations.length} total stations</p>
         </div>
         {isAdmin && (
           <button id="create-station-btn" className="btn-primary" onClick={openCreate}>
@@ -199,15 +199,15 @@ export default function Stations({ toast }) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap bg-surface-raised border border-line rounded-lg p-1">
           {filterOptions.map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`px-3 py-1.5 text-xs rounded-lg font-semibold transition-all duration-150 ${
+              className={`px-3 py-1.5 text-xs rounded-md font-semibold transition-all duration-150 ${
                 filter === s
-                  ? 'bg-accent/15 text-accent border border-accent/30'
-                  : 'bg-surface-raised border border-line text-ink-muted hover:text-ink hover:border-line/80'
+                  ? 'bg-surface shadow-[0_1px_3px_rgba(24,24,27,0.08)] text-ink'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)}
