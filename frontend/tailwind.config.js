@@ -4,7 +4,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans:  ['Inter', 'system-ui', 'sans-serif'],
+        geist: ['Geist', 'system-ui', 'sans-serif'],
+        mono:  ['Geist Mono', 'ui-monospace', 'monospace'],
       },
       colors: {
         bg: '#F5F4EE', // Warm alabaster/stone page background (main body & top header)

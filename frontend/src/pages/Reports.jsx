@@ -9,7 +9,7 @@ import {
 } from 'recharts'
 
 const today = new Date().toISOString().slice(0, 10)
-const monthAgo = new Date(Date.now() - 30 * 86400 * 1000).toISOString().slice(0, 10)
+const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString().slice(0, 10)
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Reports({ toast }) {
-  const [from, setFrom] = useState(monthAgo)
+  const [from, setFrom] = useState(sevenDaysAgo)
   const [to, setTo] = useState(today)
   const [activeTab, setActiveTab] = useState('revenue')
 
@@ -123,18 +123,26 @@ export default function Reports({ toast }) {
           <input type="date" className="input w-38 text-sm" value={to} min={from} max={today} onChange={(e) => setTo(e.target.value)} id="report-to" />
         </div>
         <div className="flex gap-1.5 ml-auto">
-          {quickRanges.map(({ label, days }) => (
-            <button
-              key={label}
-              className="px-3 py-1.5 text-xs rounded-lg font-semibold bg-surface-raised border border-line text-ink-faint hover:text-ink-muted hover:border-line/60 transition-all"
-              onClick={() => {
-                setFrom(new Date(Date.now() - days * 86400 * 1000).toISOString().slice(0, 10))
-                setTo(today)
-              }}
-            >
-              {label}
-            </button>
-          ))}
+          {quickRanges.map(({ label, days }) => {
+            const rangeFrom = new Date(Date.now() - days * 86400 * 1000).toISOString().slice(0, 10)
+            const isActive = from === rangeFrom && to === today
+            return (
+              <button
+                key={label}
+                className={`px-3 py-1.5 text-xs rounded-lg font-semibold border transition-all ${
+                  isActive
+                    ? 'bg-accent text-white border-accent shadow-sm'
+                    : 'bg-surface-raised border-line text-ink-faint hover:text-ink-muted hover:border-line/60'
+                }`}
+                onClick={() => {
+                  setFrom(rangeFrom)
+                  setTo(today)
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
       </div>
 

@@ -18,7 +18,7 @@ export default function StatCard({ label, value, icon: Icon, color = 'blue', sub
       )}
       <div className="min-w-0 flex-1">
         <p className="text-[10px] font-bold text-ink-faint uppercase tracking-[0.12em] truncate">{label}</p>
-        <p className="text-[26px] font-bold text-ink mt-1.5 tabular-nums leading-none tracking-tight">{value}</p>
+        <p className="text-[26px] font-bold text-ink mt-1.5 tabular-nums leading-none tracking-tight font-geist">{value}</p>
         {sub && <p className="text-xs text-ink-muted mt-1.5">{sub}</p>}
         {trend !== undefined && (
           <p className={`text-xs font-semibold mt-1.5 ${trend >= 0 ? 'text-success' : 'text-danger'}`}>

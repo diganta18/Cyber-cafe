@@ -28,7 +28,7 @@ function SidebarContent({ visibleLinks, user, handleLogout, onNav }) {
           </div>
         </div>
         <div>
-          <p className="text-white font-bold text-sm leading-tight tracking-tight">CyberCafe</p>
+          <p className="text-white font-bold text-sm leading-tight tracking-tight font-geist">CyberCafe</p>
           <p className="text-sidebar-muted text-[10px] font-semibold tracking-[0.12em] uppercase mt-0.5">Manager Pro</p>
         </div>
       </div>
