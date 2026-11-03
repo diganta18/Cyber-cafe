@@ -3,6 +3,14 @@ const pool = require('../config/db');
 const { ok, fail } = require('../utils/response');
 const { getBillDetail } = require('../utils/billHelper');
 
+function toUtcIso(dt) {
+  if (!dt) return dt;
+  if (dt instanceof Date) return dt.toISOString();
+  const s = String(dt).trim();
+  if (/Z$|[+-]\d{2}:\d{2}$/.test(s)) return s;
+  return s.replace(' ', 'T') + 'Z';
+}
+
 async function listBills(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -53,6 +61,7 @@ async function listBills(req, res, next) {
 
     const result = rows.map(r => ({
       ...r,
+      created_at: toUtcIso(r.created_at),
       total: parseFloat(r.total),
       discount: parseFloat(r.discount)
     }));
