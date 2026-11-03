@@ -56,6 +56,14 @@ function computeTotal(timeCharge, serviceCharge, discount) {
   return { discount: clampedDiscount, total };
 }
 
+function toUtcDate(dt) {
+  if (!dt) return new Date();
+  if (dt instanceof Date) return dt;
+  const s = String(dt).trim();
+  if (/Z$|[+-]\d{2}:\d{2}$/.test(s)) return new Date(s);
+  return new Date(s.replace(' ', 'T') + 'Z');
+}
+
 /**
  * Full bill calculation.
  * @param {Date|string} startTime
@@ -67,9 +75,9 @@ function computeTotal(timeCharge, serviceCharge, discount) {
  * @returns {{ elapsedMinutes, billedMinutes, timeCharge, serviceCharge, discount, total }}
  */
 function calculateBill(startTime, endTime, hourlyRate, services, discount = 0, blockMinutes = 15) {
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  const elapsedMinutes = (end - start) / 60000; // ms -> minutes
+  const start = toUtcDate(startTime);
+  const end = toUtcDate(endTime);
+  const elapsedMinutes = Math.max(0, (end - start) / 60000); // ms -> minutes
   const billedMinutes = getBilledMinutes(elapsedMinutes, blockMinutes);
   const timeCharge = getTimeCharge(billedMinutes, hourlyRate);
   const serviceCharge = getServiceCharge(services);
