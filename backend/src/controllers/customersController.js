@@ -2,6 +2,14 @@
 const pool = require('../config/db');
 const { ok, fail } = require('../utils/response');
 
+function toUtcIso(dt) {
+  if (!dt) return dt;
+  if (dt instanceof Date) return dt.toISOString();
+  const s = String(dt).trim();
+  if (/Z$|[+-]\d{2}:\d{2}$/.test(s)) return s;
+  return s.replace(' ', 'T') + 'Z';
+}
+
 async function listCustomers(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -26,7 +34,12 @@ async function listCustomers(req, res, next) {
       [...params, limit, offset]
     );
 
-    return ok(res, { items: rows, total, page, limit });
+    const items = rows.map((r) => ({
+      ...r,
+      created_at: toUtcIso(r.created_at),
+    }));
+
+    return ok(res, { items, total, page, limit });
   } catch (err) {
     next(err);
   }
@@ -75,7 +88,17 @@ async function getCustomer(req, res, next) {
       [id]
     );
 
-    return ok(res, { ...rows[0], sessions });
+    const customer = {
+      ...rows[0],
+      created_at: toUtcIso(rows[0].created_at),
+      sessions: sessions.map((s) => ({
+        ...s,
+        start_time: toUtcIso(s.start_time),
+        end_time: toUtcIso(s.end_time),
+      })),
+    };
+
+    return ok(res, customer);
   } catch (err) {
     next(err);
   }
