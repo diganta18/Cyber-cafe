@@ -2,6 +2,14 @@
 const pool = require('../config/db');
 const { ok, fail } = require('../utils/response');
 
+function toUtcIso(dt) {
+  if (!dt) return dt;
+  if (dt instanceof Date) return dt.toISOString();
+  const s = String(dt).trim();
+  if (/Z$|[+-]\d{2}:\d{2}$/.test(s)) return s;
+  return s.replace(' ', 'T') + 'Z';
+}
+
 async function listStations(req, res, next) {
   try {
     const [stations] = await pool.query(
@@ -28,7 +36,7 @@ async function listStations(req, res, next) {
           station.active_session = {
             id: s.id,
             customer_name: s.customer_name,
-            start_time: s.start_time,
+            start_time: toUtcIso(s.start_time),
           };
         }
       });
