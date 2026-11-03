@@ -4,6 +4,14 @@ const { ok, fail } = require('../utils/response');
 const { calculateBill, round2 } = require('../services/billing');
 const { getBillDetail } = require('../utils/billHelper');
 
+function toUtcIso(dt) {
+  if (!dt) return dt;
+  if (dt instanceof Date) return dt.toISOString();
+  const s = String(dt).trim();
+  if (/Z$|[+-]\d{2}:\d{2}$/.test(s)) return s;
+  return s.replace(' ', 'T') + 'Z';
+}
+
 // Helper: get billing block_minutes from settings
 async function getBlockMinutes(conn) {
   const [rows] = await conn.query(
@@ -75,7 +83,9 @@ async function startSession(req, res, next) {
        WHERE s.id = ?`,
       [sessionId]
     );
-    return ok(res, session[0], 201);
+    const row = session[0];
+    if (row) row.start_time = toUtcIso(row.start_time);
+    return ok(res, row, 201);
   } catch (err) {
     await conn.rollback();
     next(err);
@@ -126,7 +136,8 @@ async function getActiveSessions(req, res, next) {
 
     const items = sessions.map((s) => {
       const services = servicesMap[s.id] || [];
-      const elapsedMs = now - new Date(s.start_time);
+      const startTimeIso = toUtcIso(s.start_time);
+      const elapsedMs = Math.max(0, now - new Date(startTimeIso));
       const elapsedMinutes = elapsedMs / 60000;
       const billedMinutes = Math.max(blockMinutes, Math.ceil(elapsedMinutes / blockMinutes) * blockMinutes);
       const running_time_charge = round2((billedMinutes * s.hourly_rate) / 60);
@@ -139,7 +150,7 @@ async function getActiveSessions(req, res, next) {
         station_id: s.station_id,
         station_name: s.station_name,
         hourly_rate: s.hourly_rate,
-        start_time: s.start_time,
+        start_time: startTimeIso,
         services,
         running_time_charge,
         running_service_charge,
@@ -382,7 +393,13 @@ async function listSessions(req, res, next) {
       [...params, limit, offset]
     );
 
-    return ok(res, { items: rows, total, page, limit });
+    const result = rows.map((r) => ({
+      ...r,
+      start_time: toUtcIso(r.start_time),
+      end_time: toUtcIso(r.end_time),
+    }));
+
+    return ok(res, { items: result, total, page, limit });
   } catch (err) {
     next(err);
   }
