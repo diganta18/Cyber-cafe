@@ -60,23 +60,23 @@ export default function Bills({ toast }) {
 
   const columns = [
     {
-      key: 'bill_no', label: 'Bill No.',
-      render: (val) => <span className="font-mono text-sm font-bold text-ink tracking-tight">{val}</span>,
+      key: 'bill_no', label: 'Bill number',
+      render: (val) => <span className="font-mono text-xs font-semibold text-ink">{val}</span>,
     },
     {
       key: 'customer_name', label: 'Customer',
-      render: (val) => <span className="font-semibold text-ink">{val}</span>,
+      render: (val) => <span className="font-medium text-ink">{val}</span>,
     },
-    { key: 'station_name', label: 'Station', render: (val) => <span className="text-sm text-ink-muted">{val}</span> },
+    { key: 'station_name', label: 'Station', render: (val) => <span className="text-xs text-ink-muted">{val}</span> },
     {
       key: 'total', label: 'Total',
-      render: (val) => <span className="font-bold text-success font-mono">{formatCurrency(val)}</span>,
+      render: (val) => <span className="font-semibold text-ink font-geist text-xs">{formatCurrency(val)}</span>,
     },
     {
       key: 'discount', label: 'Discount',
       render: (val) => val > 0
-        ? <span className="text-warning font-semibold font-mono text-sm">{formatCurrency(val)}</span>
-        : <span className="text-ink-faint">—</span>,
+        ? <span className="text-warning font-medium font-geist text-xs">{formatCurrency(val)}</span>
+        : <span className="text-ink-faint text-xs">—</span>,
     },
     {
       key: 'status', label: 'Status',
@@ -89,19 +89,19 @@ export default function Bills({ toast }) {
     {
       key: 'id', label: '',
       render: (_, row) => (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-end gap-1.5">
           {row.status === 'unpaid' && (
             <button
               onClick={(e) => { e.stopPropagation(); setPayModal(row); setPayMode('cash') }}
               className="btn-primary py-1 px-2.5 text-xs"
               aria-label="Pay"
             >
-              <CreditCard className="h-3.5 w-3.5" /> Pay
+              <CreditCard className="h-3 w-3" /> Pay
             </button>
           )}
           <button
             onClick={(e) => { e.stopPropagation(); navigate(`/bills/${row.id}`) }}
-            className="btn-ghost py-1.5 px-2"
+            className="btn-ghost py-1 px-2 text-xs"
             aria-label="Open invoice"
           >
             <ExternalLink className="h-3.5 w-3.5" />
@@ -116,42 +116,38 @@ export default function Bills({ toast }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Bills</h1>
-          <p className="text-sm text-ink-muted mt-1">{total} total bills</p>
+          <p className="text-xs text-ink-muted mt-1">{total} total bills recorded</p>
         </div>
       </div>
 
       {/* Status tabs + search */}
-      <div className="flex gap-3 flex-wrap items-center">
-        <div className="flex gap-1.5 flex-wrap bg-surface-raised border border-line rounded-lg p-1">
+      <div className="flex gap-3 flex-wrap items-center justify-between">
+        <div className="tab-group">
           {STATUS_TABS.map((s) => (
             <button
               key={s}
               onClick={() => { setStatusFilter(s); setPage(1) }}
-              className={`px-3 py-1.5 text-xs rounded-md font-semibold transition-all duration-150 ${
-                statusFilter === s
-                  ? 'bg-surface shadow-[0_1px_3px_rgba(24,24,27,0.08)] text-ink'
-                  : 'text-ink-muted hover:text-ink'
-              }`}
+              className={`tab-item ${statusFilter === s ? 'tab-item-active' : ''}`}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
         <form
-          className="flex gap-2 ml-auto"
+          className="flex gap-2"
           onSubmit={(e) => { e.preventDefault(); setSearch(searchInput); setPage(1) }}
         >
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-faint" />
             <input
               type="text"
-              placeholder="Bill no or customer…"
-              className="input pl-9 w-52"
+              placeholder="Search bill or customer..."
+              className="input pl-8.5 w-56 text-xs"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
-          <button type="submit" className="btn-secondary">Search</button>
+          <button type="submit" className="btn-secondary text-xs py-1.5 px-3">Search</button>
         </form>
       </div>
 
