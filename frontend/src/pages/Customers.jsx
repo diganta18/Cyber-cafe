@@ -92,28 +92,28 @@ export default function Customers({ toast }) {
     {
       key: 'name', label: 'Customer',
       render: (val) => (
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-accent/10 border border-accent/20 text-accent text-xs font-bold flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-md bg-surface-raised border border-line text-ink-muted text-xs font-semibold flex items-center justify-center flex-shrink-0">
             {val.charAt(0).toUpperCase()}
           </div>
-          <span className="font-semibold text-ink">{val}</span>
+          <span className="font-medium text-ink font-geist">{val}</span>
         </div>
       ),
     },
     {
       key: 'phone', label: 'Phone',
       render: (val) => val
-        ? <span className="flex items-center gap-1.5 text-sm text-ink-muted"><Phone className="h-3.5 w-3.5 text-ink-faint" />{val}</span>
-        : <span className="text-ink-faint">—</span>,
+        ? <span className="flex items-center gap-1.5 text-xs text-ink-muted"><Phone className="h-3 w-3 text-ink-faint" />{val}</span>
+        : <span className="text-ink-faint text-xs">—</span>,
     },
     {
       key: 'email', label: 'Email',
-      render: (val) => val ? <span className="text-sm text-ink-muted">{val}</span> : <span className="text-ink-faint">—</span>,
+      render: (val) => val ? <span className="text-xs text-ink-muted">{val}</span> : <span className="text-ink-faint text-xs">—</span>,
     },
     {
       key: 'visit_count', label: 'Visits',
       render: (val) => (
-        <span className="inline-flex items-center justify-center h-6 min-w-6 px-2 rounded-full bg-accent/10 border border-accent/15 text-accent text-xs font-bold">
+        <span className="font-mono text-xs font-medium text-ink">
           {val ?? 0}
         </span>
       ),
@@ -122,9 +122,11 @@ export default function Customers({ toast }) {
     {
       key: 'id', label: '',
       render: (_, row) => (
-        <button onClick={() => openEdit(row)} className="btn-ghost py-1.5 px-2" aria-label={`Edit ${row.name}`}>
-          <Pencil className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex justify-end">
+          <button onClick={() => openEdit(row)} className="btn-ghost py-1 px-2 text-xs" aria-label={`Edit ${row.name}`}>
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        </div>
       ),
     },
   ]
@@ -134,28 +136,28 @@ export default function Customers({ toast }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Customers</h1>
-          <p className="text-sm text-ink-muted mt-1">{total} total customers</p>
+          <p className="text-xs text-ink-muted mt-1">{total} registered customers</p>
         </div>
         <button id="create-customer-btn" className="btn-primary" onClick={openCreate}>
-          <Plus className="h-4 w-4" /> New Customer
+          <Plus className="h-4 w-4" /> New customer
         </button>
       </div>
 
       <form onSubmit={handleSearch} className="flex gap-2">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-faint" />
           <input
             type="text"
-            placeholder="Search by name or phone…"
-            className="input pl-9 w-64"
+            placeholder="Search by name or phone..."
+            className="input pl-8.5 w-64 text-xs"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
-        <button type="submit" className="btn-secondary">Search</button>
+        <button type="submit" className="btn-secondary text-xs py-1.5 px-3">Search</button>
         {search && (
-          <button type="button" className="btn-ghost" onClick={() => { setSearch(''); setSearchInput(''); setPage(1) }}>
-            <X className="h-4 w-4" /> Clear
+          <button type="button" className="btn-ghost text-xs" onClick={() => { setSearch(''); setSearchInput(''); setPage(1) }}>
+            <X className="h-3.5 w-3.5" /> Clear
           </button>
         )}
       </form>
