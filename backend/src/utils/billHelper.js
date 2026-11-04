@@ -1,5 +1,21 @@
 'use strict';
 
+function toUtcIso(dt) {
+  if (!dt) return dt;
+  if (dt instanceof Date) return dt.toISOString();
+  const s = String(dt).trim();
+  if (/Z$|[+-]\d{2}:\d{2}$/.test(s)) return s;
+  return s.replace(' ', 'T') + 'Z';
+}
+
+function toUtcDate(dt) {
+  if (!dt) return null;
+  if (dt instanceof Date) return dt;
+  const s = String(dt).trim();
+  if (/Z$|[+-]\d{2}:\d{2}$/.test(s)) return new Date(s);
+  return new Date(s.replace(' ', 'T') + 'Z');
+}
+
 /**
  * Shared helper: fetch a full bill detail object (suitable for invoice/API response).
  * Works with both a pool and a connection since both expose .query().
@@ -48,9 +64,9 @@ async function getBillDetail(db, billId) {
   const blockMinutes = blockRows.length > 0 ? parseInt(blockRows[0].value) : 15;
 
   // Compute billed_minutes using the actual block size
-  const elapsed = bill.end_time
-    ? (new Date(bill.end_time) - new Date(bill.start_time)) / 60000
-    : null;
+  const start = toUtcDate(bill.start_time);
+  const end = toUtcDate(bill.end_time);
+  const elapsed = end && start ? Math.max(0, (end - start) / 60000) : null;
   const billedMinutes =
     elapsed !== null
       ? Math.max(blockMinutes, Math.ceil(elapsed / blockMinutes) * blockMinutes)
@@ -60,14 +76,14 @@ async function getBillDetail(db, billId) {
     id: bill.id,
     bill_no: bill.bill_no,
     status: bill.status,
-    created_at: bill.created_at,
+    created_at: toUtcIso(bill.created_at),
     customer: { name: bill.customer_name, phone: bill.customer_phone },
     station: { name: bill.station_name, hourly_rate: parseFloat(bill.hourly_rate) },
     staff: { name: bill.staff_name },
     session: {
       id: bill.session_id,
-      start_time: bill.start_time,
-      end_time: bill.end_time,
+      start_time: toUtcIso(bill.start_time),
+      end_time: toUtcIso(bill.end_time),
       billed_minutes: billedMinutes,
     },
     services: services.map((s) => ({
