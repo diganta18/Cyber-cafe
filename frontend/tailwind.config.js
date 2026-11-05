@@ -4,40 +4,50 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans:  ['Inter', 'system-ui', 'sans-serif'],
-        geist: ['Geist', 'system-ui', 'sans-serif'],
-        mono:  ['Geist Mono', 'ui-monospace', 'monospace'],
+        sans:      ['Inter', 'system-ui', 'sans-serif'],
+        geist:     ['Geist', 'system-ui', 'sans-serif'],
+        mono:      ['Geist Mono', 'ui-monospace', 'monospace'],
+        pricedown: ['Pricedown', 'Impact', 'system-ui', 'sans-serif'],
       },
       colors: {
-        bg: '#F5F4EE', // Warm alabaster/stone page background (main body & top header)
+        // Main screen background: Warm vanilla cream from palette (#F5F0D0)
+        bg: '#F5F0D0',
+        // Dark sidebar: Deep espresso dark from palette (#2A2407)
         sidebar: {
-          DEFAULT: '#000000', // Twitter/X pure black
-          surface: '#16181C', // Dark charcoal for the bottom Admin profile card & hover states
-          border: '#262930',  // Subtle dark divider line inside the sidebar
-          ink: '#FFFFFF',     // Pure white for all sidebar icons and nav text
-          muted: '#8B919E',   // Muted gray for "NAVIGATION" label and "Admin" subtext
+          DEFAULT: '#2A2407',
+          surface: '#1D1905', // Darker espresso for bottom profile card & hover
+          border: '#3F3714',  // Warm olive-espresso border line
+          ink: '#FFFFFF',     // Crisp white for active nav and headings
+          muted: '#B0A888',   // Warm olive-gray for navigation labels & subtext
         },
         surface: {
           DEFAULT: '#FFFFFF', // Pure white for cards, tables, and modals
-          raised: '#F9F8F5',  // Warm off-white for inner cards (like GAME-01, PC-01 slots), hover rows, inputs
+          raised: '#ECE4A9',  // Warm vanilla cream from palette (#ECE4A9) for inner cards & inputs
         },
-        line: '#E4E2DC',      // Warm stone border for all light-mode cards, slots, and dividers
+        line: '#DDD496',      // Warm vanilla-stone divider line
         ink: {
-          DEFAULT: '#18181B', // Deep charcoal for primary dashboard headings, numbers, and bold text
-          muted: '#6E6D68',   // Warm gray for secondary labels ("ACTIVE SESSIONS", "Gaming", timestamps)
-          faint: '#9E9D96',   // Placeholders and captions
+          DEFAULT: '#2A2407', // Deep espresso from palette for primary text & headings
+          muted: '#645B38',   // Warm olive-charcoal for secondary labels
+          faint: '#948A63',   // Warm muted captions & placeholders
         },
+        // Primary Accent: Vibrant Amber Orange from palette (#EC7E00) for all primary buttons & highlights
         accent: {
-          DEFAULT: '#3B7A57', // Deep organic forest/sage green (replaces all cyan/teal)
-          soft: 'rgba(59, 122, 87, 0.12)', // Soft tint for icon badges and active states
+          DEFAULT: '#EC7E00',
+          hover: '#D46F00',
+          soft: 'rgba(236, 126, 0, 0.12)',
         },
-        success: '#2E8555',   // Crisp botanical green (Paid bills, Available status dots)
-        warning: '#D99B26',   // Warm ochre/amber (Today's Revenue accent, pending states)
-        danger: '#C94A4A',    // Terracotta red (Occupied dots, Today's Sessions accent, errors)
+        // Success: Mapped to Amber Orange to eliminate pine green across status tags & badges
+        success: '#EC7E00',
+        warning: '#EC7E00',
+        // Terracotta red for Occupied stations & danger actions
+        danger: '#C94A4A',
       },
       boxShadow: {
-        'card':       '0 2px 8px -2px rgba(24, 24, 27, 0.06), 0 1px 3px -1px rgba(24, 24, 27, 0.04)',
-        'card-hover': '0 4px 16px -2px rgba(24, 24, 27, 0.08), 0 2px 6px -1px rgba(24, 24, 27, 0.06)',
+        'card':       '4px 4px 0px #2A2407',
+        'card-sm':    '2px 2px 0px #2A2407',
+        'card-hover': '6px 6px 0px #2A2407',
+        'btn':        '2px 2px 0px #2A2407',
+        'btn-hover':  '3px 3px 0px #2A2407',
       },
     },
   },
