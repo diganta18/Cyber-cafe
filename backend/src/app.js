@@ -14,6 +14,8 @@ const servicesRouter = require('./routes/services');
 const sessionsRouter = require('./routes/sessions');
 const billsRouter = require('./routes/bills');
 const reportsRouter = require('./routes/reports');
+const bookingsRouter = require('./routes/bookings');
+const printOrdersRouter = require('./routes/printOrders');
 
 const app = express();
 
@@ -48,6 +50,8 @@ app.use('/api/services', servicesRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/bills', billsRouter);
 app.use('/api/reports', reportsRouter);
+app.use('/api/bookings', bookingsRouter);
+app.use('/api/print-orders', printOrdersRouter);
 
 // 404
 app.use((req, res) => {
