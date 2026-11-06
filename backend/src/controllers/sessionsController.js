@@ -62,6 +62,26 @@ async function startSession(req, res, next) {
       return fail(res, 'Station is not available', 400);
     }
 
+    // Check if station has an imminent reservation (within 15 minutes)
+    const [imminentBookings] = await conn.query(
+      `SELECT b.id, b.booking_code, b.customer_id, c.name as customer_name
+       FROM bookings b
+       JOIN customers c ON c.id = b.customer_id
+       WHERE b.station_id = ? AND b.status = 'confirmed'
+         AND b.start_time <= NOW() + INTERVAL 15 MINUTE
+         AND b.end_time >= NOW()`,
+      [station_id]
+    );
+
+    if (imminentBookings.length > 0) {
+      if (imminentBookings[0].customer_id === customer_id) {
+        await conn.query("UPDATE bookings SET status = 'active' WHERE id = ?", [imminentBookings[0].id]);
+      } else {
+        await conn.rollback();
+        return fail(res, `Station is reserved for booking #${imminentBookings[0].booking_code} (${imminentBookings[0].customer_name}). Please assign another station or check in the reserved customer.`, 409);
+      }
+    }
+
     // Insert session
     const [result] = await conn.query(
       "INSERT INTO sessions (customer_id, station_id, staff_id, start_time, status) VALUES (?, ?, ?, NOW(), 'active')",
