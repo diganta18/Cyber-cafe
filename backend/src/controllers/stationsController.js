@@ -12,11 +12,18 @@ function toUtcIso(dt) {
 
 async function listStations(req, res, next) {
   try {
+    // 1. Expire no-shows
+    try {
+      await pool.query(
+        "UPDATE bookings SET status = 'no_show' WHERE status = 'confirmed' AND start_time < NOW() - INTERVAL 15 MINUTE"
+      );
+    } catch { /* ignore if table not yet indexed */ }
+
     const [stations] = await pool.query(
       'SELECT id, name, type, hourly_rate, status FROM stations ORDER BY name ASC'
     );
 
-    // For occupied stations, add active session info
+    // 2. For occupied stations, add active session info
     const occupied = stations.filter((s) => s.status === 'occupied');
     if (occupied.length > 0) {
       const ids = occupied.map((s) => s.id);
@@ -41,6 +48,56 @@ async function listStations(req, res, next) {
         }
       });
     }
+
+    // 3. For all stations, check upcoming bookings today
+    try {
+      const [todayBookings] = await pool.query(
+        `SELECT b.id, b.booking_code, b.station_id, b.start_time, b.end_time, b.duration_mins,
+                c.name as customer_name, c.phone as customer_phone
+         FROM bookings b
+         JOIN customers c ON c.id = b.customer_id
+         WHERE b.status = 'confirmed' AND DATE(b.start_time) = CURDATE()
+         ORDER BY b.start_time ASC`
+      );
+
+      const nowTime = Date.now();
+      const fifteenMinsFromNow = nowTime + 15 * 60 * 1000;
+
+      stations.forEach((station) => {
+        const stBookings = todayBookings.filter((b) => b.station_id === station.id);
+        if (stBookings.length > 0) {
+          // Check if an imminent booking is starting within 15 min or active now
+          const imminent = stBookings.find((b) => {
+            const bStart = new Date(b.start_time).getTime();
+            const bEnd = new Date(b.end_time).getTime();
+            return bStart <= fifteenMinsFromNow && bEnd >= nowTime;
+          });
+
+          if (imminent) {
+            station.upcoming_booking = {
+              id: imminent.id,
+              booking_code: imminent.booking_code,
+              customer_name: imminent.customer_name,
+              start_time: toUtcIso(imminent.start_time),
+              end_time: toUtcIso(imminent.end_time),
+            };
+            if (station.status === 'available') {
+              station.status = 'reserved';
+            }
+          }
+
+          // Next upcoming booking for awareness
+          const nextBooking = stBookings.find((b) => new Date(b.start_time).getTime() > fifteenMinsFromNow);
+          if (nextBooking) {
+            station.next_booking = {
+              booking_code: nextBooking.booking_code,
+              customer_name: nextBooking.customer_name,
+              start_time: toUtcIso(nextBooking.start_time),
+            };
+          }
+        }
+      });
+    } catch { /* ignore if bookings table not queried */ }
 
     return ok(res, stations);
   } catch (err) {
