@@ -18,24 +18,32 @@ async function listCustomers(req, res, next) {
     const search = req.query.search ? `%${req.query.search}%` : null;
 
     const whereClause = search
-      ? 'WHERE is_active = 1 AND (name LIKE ? OR phone LIKE ?)'
-      : 'WHERE is_active = 1';
+      ? 'WHERE c.is_active = 1 AND (c.name LIKE ? OR c.phone LIKE ?)'
+      : 'WHERE c.is_active = 1';
     const params = search ? [search, search] : [];
 
     const [countRows] = await pool.query(
-      `SELECT COUNT(*) as total FROM customers ${whereClause}`,
+      `SELECT COUNT(*) as total FROM customers c ${whereClause}`,
       params
     );
     const total = countRows[0].total;
 
     const [rows] = await pool.query(
-      `SELECT id, name, phone, email, id_proof_type, id_proof_no, is_active, created_at
-       FROM customers ${whereClause} ORDER BY name ASC LIMIT ? OFFSET ?`,
+      `SELECT c.id, c.name, c.phone, c.email, c.id_proof_type, c.id_proof_no, c.is_active, c.created_at,
+              (
+                (SELECT COUNT(*) FROM sessions s WHERE s.customer_id = c.id) +
+                (SELECT COUNT(*) FROM print_orders po WHERE po.customer_id = c.id)
+              ) AS visit_count
+       FROM customers c
+       ${whereClause}
+       ORDER BY c.name ASC
+       LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
 
     const items = rows.map((r) => ({
       ...r,
+      visit_count: parseInt(r.visit_count, 10) || 0,
       created_at: toUtcIso(r.created_at),
     }));
 
@@ -69,7 +77,12 @@ async function getCustomer(req, res, next) {
   try {
     const { id } = req.params;
     const [rows] = await pool.query(
-      'SELECT id, name, phone, email, id_proof_type, id_proof_no, is_active, created_at FROM customers WHERE id = ?',
+      `SELECT c.id, c.name, c.phone, c.email, c.id_proof_type, c.id_proof_no, c.is_active, c.created_at,
+              (
+                (SELECT COUNT(*) FROM sessions s WHERE s.customer_id = c.id) +
+                (SELECT COUNT(*) FROM print_orders po WHERE po.customer_id = c.id)
+              ) AS visit_count
+       FROM customers c WHERE c.id = ?`,
       [id]
     );
     if (rows.length === 0) return fail(res, 'Customer not found', 404);
@@ -90,6 +103,7 @@ async function getCustomer(req, res, next) {
 
     const customer = {
       ...rows[0],
+      visit_count: parseInt(rows[0].visit_count, 10) || 0,
       created_at: toUtcIso(rows[0].created_at),
       sessions: sessions.map((s) => ({
         ...s,
