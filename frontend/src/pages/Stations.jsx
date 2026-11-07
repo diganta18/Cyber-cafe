@@ -6,9 +6,11 @@ import Table from '../components/Table'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Spinner from '../components/Spinner'
+import Button from '../components/Button'
+import Select from '../components/Select'
 import { Plus, Pencil, Wrench, Search, Monitor } from 'lucide-react'
 
-const STATUS_OPTIONS = ['available', 'occupied', 'maintenance']
+const STATUS_OPTIONS = ['available', 'occupied', 'reserved', 'maintenance']
 const TYPE_OPTIONS = ['PC', 'Gaming', 'Cabin']
 
 export default function Stations({ toast }) {
@@ -119,13 +121,13 @@ export default function Stations({ toast }) {
 
   const columns = [
     {
-      key: 'name', label: 'Station Name',
+      key: 'name', label: 'Station name',
       render: (val) => (
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-surface-raised border border-line flex items-center justify-center flex-shrink-0">
-            <Monitor className="h-4 w-4 text-ink-faint" />
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-md bg-surface-raised border border-line flex items-center justify-center flex-shrink-0">
+            <Monitor className="h-3.5 w-3.5 text-ink-faint" />
           </div>
-          <span className="font-semibold text-ink">{val}</span>
+          <span className="font-medium text-ink font-geist">{val}</span>
         </div>
       ),
     },
@@ -134,26 +136,43 @@ export default function Stations({ toast }) {
       render: (val) => <span className={`badge badge-${val}`}>{val}</span>,
     },
     {
-      key: 'hourly_rate', label: 'Rate/hr',
-      render: (val) => <span className="font-mono text-sm text-accent font-bold">{formatCurrency(val)}</span>,
+      key: 'hourly_rate', label: 'Rate / hr',
+      render: (val) => <span className="font-mono text-xs text-ink font-semibold">{formatCurrency(val)}</span>,
     },
     {
       key: 'status', label: 'Status',
-      render: (val) => <span className={`badge badge-${val}`}>{val}</span>,
+      render: (val, row) => (
+        <div>
+          <span className={`badge badge-${val}`}>{val}</span>
+          {row.upcoming_booking && (
+            <span className="block text-[10px] text-[#EC7E00] font-extrabold mt-0.5 font-mono">
+              #{row.upcoming_booking.booking_code}
+            </span>
+          )}
+        </div>
+      ),
     },
     {
-      key: 'active_session', label: 'Current User',
-      render: (val) => val
-        ? <span className="text-sm text-ink font-medium">{val.customer_name}</span>
-        : <span className="text-ink-faint text-sm">—</span>,
+      key: 'active_session', label: 'Current user',
+      render: (val, row) => {
+        if (val) return <span className="text-xs text-ink font-medium">{val.customer_name}</span>
+        if (row.upcoming_booking) {
+          return (
+            <span className="text-xs text-[#EC7E00] font-bold">
+              Reserved: {row.upcoming_booking.customer_name}
+            </span>
+          )
+        }
+        return <span className="text-ink-faint text-xs">—</span>
+      },
     },
     ...(isAdmin ? [{
       key: 'id', label: '',
       render: (_, row) => (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-end gap-1.5">
           <button
             onClick={() => openEdit(row)}
-            className="btn-ghost py-1.5 px-2 text-xs"
+            className="btn-ghost py-1 px-2 text-xs"
             disabled={row.status === 'occupied'}
             aria-label={`Edit ${row.name}`}
           >
@@ -162,7 +181,7 @@ export default function Stations({ toast }) {
           {row.status !== 'occupied' && (
             <button
               onClick={() => handleToggleStatus(row)}
-              className="btn-ghost py-1.5 px-2 text-xs"
+              className="btn-ghost py-1 px-2 text-xs"
               aria-label={`Toggle maintenance for ${row.name}`}
             >
               <Wrench className="h-3.5 w-3.5" />
@@ -178,41 +197,37 @@ export default function Stations({ toast }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Stations</h1>
-          <p className="text-sm text-ink-muted mt-1">{stations.length} total stations</p>
+          <p className="text-xs text-ink-muted mt-1">{stations.length} hardware terminals configured</p>
         </div>
         {isAdmin && (
-          <button id="create-station-btn" className="btn-primary" onClick={openCreate}>
-            <Plus className="h-4 w-4" /> New Station
-          </button>
+          <Button id="create-station-btn" size="sm" onClick={openCreate}>
+            New station
+          </Button>
         )}
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 flex-wrap items-center">
-        <div className="relative flex-shrink-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
-          <input
-            type="text"
-            placeholder="Search stations…"
-            className="input pl-9 w-52"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-1.5 flex-wrap bg-surface-raised border border-line rounded-lg p-1">
+      <div className="flex gap-3 flex-wrap items-center justify-between">
+        <div className="tab-group">
           {filterOptions.map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`px-3 py-1.5 text-xs rounded-md font-semibold transition-all duration-150 ${
-                filter === s
-                  ? 'bg-surface shadow-[0_1px_3px_rgba(24,24,27,0.08)] text-ink'
-                  : 'text-ink-muted hover:text-ink'
-              }`}
+              className={`tab-item ${filter === s ? 'tab-item-active' : ''}`}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
+        </div>
+        <div className="relative flex-shrink-0">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted pointer-events-none stroke-[2.2]" />
+          <input
+            type="text"
+            placeholder="Search stations..."
+            className="input pl-10 w-56 text-xs font-medium"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       </div>
 
@@ -240,10 +255,13 @@ export default function Stations({ toast }) {
             {formErrors.name && <p className="error-text">{formErrors.name}</p>}
           </div>
           <div>
-            <label className="label">Type *</label>
-            <select className="input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-              {TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <Select
+              id="station-type-select"
+              label="Type *"
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              options={TYPE_OPTIONS.map((t) => ({ value: t, label: t }))}
+            />
           </div>
           <div>
             <label className="label">Hourly Rate (₹) *</label>
@@ -258,25 +276,24 @@ export default function Stations({ toast }) {
           </div>
           {editing && (
             <div>
-              <label className="label">Status</label>
-              <select
-                className="input"
+              <Select
+                id="station-status-select"
+                label="Status"
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 disabled={editing?.status === 'occupied'}
-              >
-                {STATUS_OPTIONS.filter(s => s !== 'occupied').map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+                options={STATUS_OPTIONS.filter(s => s !== 'occupied').map((s) => ({
+                  value: s,
+                  label: s.charAt(0).toUpperCase() + s.slice(1),
+                }))}
+              />
             </div>
           )}
           <div className="flex justify-end gap-3 pt-2">
             <button className="btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-            <button className="btn-primary" onClick={handleSave} disabled={saving} id="save-station-btn">
-              {saving ? <Spinner size="sm" /> : null}
+            <Button id="save-station-btn" size="sm" onClick={handleSave} loading={saving}>
               {saving ? 'Saving…' : 'Save'}
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
