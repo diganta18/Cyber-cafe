@@ -242,15 +242,26 @@ async function trackPrintOrder(req, res, next) {
     const { tracking_query } = req.query;
     if (!tracking_query) return fail(res, 'tracking_query (order_no or phone) is required', 400);
 
+    const q = tracking_query.trim().replace(/^#/, '');
+    let normalizedPr = q.toUpperCase();
+    if (normalizedPr.startsWith('PR') && !normalizedPr.startsWith('PR-')) {
+      normalizedPr = 'PR-' + normalizedPr.slice(2).trim();
+    }
+    const prVariant = normalizedPr.startsWith('PR-') ? normalizedPr : `PR-${normalizedPr}`;
+    const digitsOnly = q.replace(/\D/g, '');
+
     const [rows] = await pool.query(
       `SELECT po.id, po.order_no, po.file_name, po.color_mode, po.duplex_mode,
               po.copies, po.page_count, po.estimated_cost, po.status, po.created_at,
               c.name as customer_name, c.phone as customer_phone
        FROM print_orders po
        JOIN customers c ON c.id = po.customer_id
-       WHERE po.order_no = ? OR c.phone = ?
+       WHERE po.order_no = ? 
+          OR po.order_no = ? 
+          OR c.phone = ? 
+          OR (LENGTH(?) >= 10 AND c.phone LIKE ?)
        ORDER BY po.created_at DESC`,
-      [tracking_query, tracking_query]
+      [normalizedPr, prVariant, q, digitsOnly, `%${digitsOnly.slice(-10)}`]
     );
 
     const result = rows.map((r) => ({
