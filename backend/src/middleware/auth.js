@@ -22,6 +22,24 @@ function verifyToken(req, res, next) {
 }
 
 /**
+ * Middleware: optionally verify Bearer JWT token if provided.
+ */
+function optionalToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const jwtSecret = process.env.JWT_SECRET || 'cybercafe_jwt_secret_fallback_key';
+      const decoded = jwt.verify(token, jwtSecret);
+      req.user = decoded;
+    } catch {
+      // Ignore invalid token and continue as guest
+    }
+  }
+  next();
+}
+
+/**
  * Middleware factory: require one of the given roles.
  * @param {...string} roles
  */
@@ -35,4 +53,4 @@ function requireRole(...roles) {
   };
 }
 
-module.exports = { verifyToken, requireRole };
+module.exports = { verifyToken, optionalToken, requireRole };
