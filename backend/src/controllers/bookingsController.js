@@ -21,6 +21,9 @@ async function expireNoShows(conn = pool) {
     await conn.query(
       "UPDATE bookings SET status = 'no_show' WHERE status = 'confirmed' AND start_time < NOW() - INTERVAL 15 MINUTE"
     );
+    await conn.query(
+      "UPDATE bookings SET status = 'cancelled' WHERE status = 'pending' AND start_time < NOW() - INTERVAL 15 MINUTE"
+    );
   } catch (err) {
     console.error('[expireNoShows] error:', err.message);
   }
@@ -98,7 +101,7 @@ async function getAvailableSlots(req, res, next) {
     const [existingBookings] = await pool.query(
       `SELECT station_id, start_time, end_time, status
        FROM bookings
-       WHERE DATE(start_time) = ? AND status IN ('confirmed', 'active')`,
+       WHERE DATE(start_time) = ? AND status IN ('pending', 'confirmed', 'active')`,
       [date]
     );
 
@@ -219,7 +222,7 @@ async function createBooking(req, res, next) {
     // Concurrency collision check
     const [conflicts] = await conn.query(
       `SELECT id FROM bookings
-       WHERE station_id = ? AND status IN ('confirmed', 'active')
+       WHERE station_id = ? AND status IN ('pending', 'confirmed', 'active')
          AND NOT (end_time <= ? OR start_time >= ?)
        FOR UPDATE`,
       [station_id, sqlStart, sqlEnd]
@@ -234,10 +237,18 @@ async function createBooking(req, res, next) {
     const code = Math.floor(1000 + Math.random() * 9000);
     const bookingCode = `BK-${code}`;
 
+    // Booking status logic:
+    // Only if authenticated staff explicitly specifies status: 'confirmed' does it become 'confirmed'.
+    // Otherwise (portal booking, customer self-service, or when not explicitly confirmed by staff), it is ALWAYS 'pending'.
+    let initialStatus = 'pending';
+    if (req.user && req.body.status === 'confirmed') {
+      initialStatus = 'confirmed';
+    }
+
     const [result] = await conn.query(
       `INSERT INTO bookings (booking_code, customer_id, station_id, start_time, end_time, duration_mins, status, notes)
-       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?)`,
-      [bookingCode, finalCustomerId, station_id, sqlStart, sqlEnd, duration, notes || null]
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [bookingCode, finalCustomerId, station_id, sqlStart, sqlEnd, duration, initialStatus, notes || null]
     );
 
     await conn.commit();
@@ -290,7 +301,7 @@ async function checkinBooking(req, res, next) {
     }
 
     const b = bookings[0];
-    if (b.status !== 'confirmed') {
+    if (b.status !== 'confirmed' && b.status !== 'pending') {
       await conn.rollback();
       return fail(res, `Booking cannot be checked in (Status: ${b.status})`, 400);
     }
@@ -356,12 +367,106 @@ async function cancelBooking(req, res, next) {
     if (bookings.length === 0) return fail(res, 'Booking not found', 404);
     const b = bookings[0];
 
-    if (b.status !== 'confirmed') {
+    if (!['pending', 'confirmed'].includes(b.status)) {
       return fail(res, `Cannot cancel booking with status '${b.status}'`, 400);
     }
 
     await pool.query("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [b.id]);
     return ok(res, { message: 'Booking cancelled successfully' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateBookingStatus(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'];
+    if (!status || !validStatuses.includes(status)) {
+      return fail(res, `Invalid status. Must be one of: ${validStatuses.join(', ')}`, 400);
+    }
+
+    const [bookings] = await pool.query(
+      'SELECT id, status FROM bookings WHERE id = ? OR booking_code = ?',
+      [id, id]
+    );
+
+    if (bookings.length === 0) return fail(res, 'Booking not found', 404);
+    const b = bookings[0];
+
+    if (b.status === 'active' || b.status === 'completed') {
+      return fail(res, `Cannot change status of a booking that is '${b.status}'`, 400);
+    }
+
+    await pool.query('UPDATE bookings SET status = ? WHERE id = ?', [status, b.id]);
+
+    const [updated] = await pool.query(
+      `SELECT b.id, b.booking_code, b.customer_id, b.station_id,
+              b.start_time, b.end_time, b.duration_mins, b.status, b.notes, b.created_at,
+              c.name as customer_name, c.phone as customer_phone,
+              st.name as station_name, st.type as station_type, st.hourly_rate
+       FROM bookings b
+       JOIN customers c ON c.id = b.customer_id
+       JOIN stations st ON st.id = b.station_id
+       WHERE b.id = ?`,
+      [b.id]
+    );
+
+    return ok(res, {
+      ...updated[0],
+      start_time: toUtcIso(updated[0].start_time),
+      end_time: toUtcIso(updated[0].end_time),
+      created_at: toUtcIso(updated[0].created_at),
+      hourly_rate: parseFloat(updated[0].hourly_rate),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function trackBooking(req, res, next) {
+  try {
+    await expireNoShows();
+    const { query } = req.query;
+    if (!query) return fail(res, 'query is required', 400);
+
+    const cleanQuery = query.trim().replace(/^#/, '');
+    let normalizedCode = cleanQuery.toUpperCase();
+    if (normalizedCode.startsWith('BK') && !normalizedCode.startsWith('BK-')) {
+      normalizedCode = 'BK-' + normalizedCode.slice(2).trim();
+    }
+    const codeVariant = normalizedCode.startsWith('BK-')
+      ? normalizedCode
+      : `BK-${normalizedCode}`;
+    const digitsOnly = cleanQuery.replace(/\D/g, '');
+
+    const [rows] = await pool.query(
+      `SELECT b.id, b.booking_code, b.customer_id, b.station_id,
+              b.start_time, b.end_time, b.duration_mins, b.status, b.notes, b.created_at,
+              c.name as customer_name, c.phone as customer_phone,
+              st.name as station_name, st.type as station_type, st.hourly_rate
+       FROM bookings b
+       JOIN customers c ON c.id = b.customer_id
+       JOIN stations st ON st.id = b.station_id
+       WHERE b.booking_code = ? 
+          OR b.booking_code = ? 
+          OR c.phone = ? 
+          OR (LENGTH(?) >= 10 AND c.phone LIKE ?)
+       ORDER BY b.start_time DESC`,
+      [normalizedCode, codeVariant, cleanQuery, digitsOnly, `%${digitsOnly.slice(-10)}`]
+    );
+
+    const result = rows.map((r) => ({
+      ...r,
+      start_time: toUtcIso(r.start_time),
+      end_time: toUtcIso(r.end_time),
+      created_at: toUtcIso(r.created_at),
+      hourly_rate: parseFloat(r.hourly_rate),
+    }));
+
+    return ok(res, result);
   } catch (err) {
     next(err);
   }
@@ -374,5 +479,7 @@ module.exports = {
   createBooking,
   checkinBooking,
   cancelBooking,
+  updateBookingStatus,
+  trackBooking,
 };
 
