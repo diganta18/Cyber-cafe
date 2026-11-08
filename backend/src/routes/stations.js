@@ -3,14 +3,16 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
-const { verifyToken, requireRole } = require('../middleware/auth');
+const { verifyToken, optionalToken, requireRole } = require('../middleware/auth');
 const {
   listStations, createStation, updateStation, patchStationStatus, deleteStation
 } = require('../controllers/stationsController');
 
-router.use(verifyToken);
+// Public / Guest accessible station listing
+router.get('/', optionalToken, listStations);
 
-router.get('/', listStations);
+// All mutations below require authenticated staff / admin token
+router.use(verifyToken);
 
 router.post(
   '/',
