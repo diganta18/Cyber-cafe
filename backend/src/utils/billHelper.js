@@ -26,31 +26,47 @@ function toUtcDate(dt) {
  */
 async function getBillDetail(db, billId) {
   const [bills] = await db.query(
-    `SELECT b.id, b.bill_no, b.status, b.created_at,
+    `SELECT b.id, b.bill_no, b.status, b.created_at, b.order_type,
             b.time_charge, b.service_charge, b.discount, b.total,
-            c.name as customer_name, c.phone as customer_phone,
-            st.name as station_name, st.hourly_rate,
-            u.name as staff_name,
+            COALESCE(c.name, 'Walk-in Guest') as customer_name,
+            c.phone as customer_phone,
+            COALESCE(st.name, 'Counter / Takeout') as station_name,
+            COALESCE(st.hourly_rate, 0) as hourly_rate,
+            COALESCE(u.name, 'Counter Staff') as staff_name,
             s.start_time, s.end_time, s.id as session_id
      FROM bills b
-     JOIN sessions s ON s.id = b.session_id
-     JOIN customers c ON c.id = s.customer_id
-     JOIN stations st ON st.id = s.station_id
-     JOIN users u ON u.id = s.staff_id
+     LEFT JOIN sessions s ON s.id = b.session_id
+     LEFT JOIN customers c ON c.id = COALESCE(s.customer_id, b.customer_id)
+     LEFT JOIN stations st ON st.id = s.station_id
+     LEFT JOIN users u ON u.id = s.staff_id
      WHERE b.id = ?`,
     [billId]
   );
   if (bills.length === 0) return null;
   const bill = bills[0];
 
-  const [services] = await db.query(
-    `SELECT ss.id, sv.name, ss.quantity, ss.unit_price,
-            ROUND(ss.quantity * ss.unit_price, 2) as line_total
-     FROM session_services ss
-     JOIN services sv ON sv.id = ss.service_id
-     WHERE ss.session_id = ?`,
-    [bill.session_id]
-  );
+  let services = [];
+  if (bill.session_id) {
+    const [sessServices] = await db.query(
+      `SELECT ss.id, sv.name, ss.quantity, ss.unit_price,
+              ROUND(ss.quantity * ss.unit_price, 2) as line_total
+       FROM session_services ss
+       JOIN services sv ON sv.id = ss.service_id
+       WHERE ss.session_id = ?`,
+      [bill.session_id]
+    );
+    services = sessServices;
+  } else {
+    const [itemServices] = await db.query(
+      `SELECT bi.id, sv.name, bi.quantity, bi.unit_price,
+              ROUND(bi.quantity * bi.unit_price, 2) as line_total
+       FROM bill_items bi
+       JOIN services sv ON sv.id = bi.service_id
+       WHERE bi.bill_id = ?`,
+      [bill.id]
+    );
+    services = itemServices;
+  }
 
   const [payments] = await db.query(
     'SELECT id, mode, amount, paid_at FROM payments WHERE bill_id = ? ORDER BY paid_at ASC',
@@ -75,17 +91,20 @@ async function getBillDetail(db, billId) {
   return {
     id: bill.id,
     bill_no: bill.bill_no,
+    order_type: bill.order_type || (bill.session_id ? 'session' : 'counter'),
     status: bill.status,
     created_at: toUtcIso(bill.created_at),
     customer: { name: bill.customer_name, phone: bill.customer_phone },
     station: { name: bill.station_name, hourly_rate: parseFloat(bill.hourly_rate) },
     staff: { name: bill.staff_name },
-    session: {
-      id: bill.session_id,
-      start_time: toUtcIso(bill.start_time),
-      end_time: toUtcIso(bill.end_time),
-      billed_minutes: billedMinutes,
-    },
+    session: bill.session_id
+      ? {
+          id: bill.session_id,
+          start_time: toUtcIso(bill.start_time),
+          end_time: toUtcIso(bill.end_time),
+          billed_minutes: billedMinutes,
+        }
+      : null,
     services: services.map((s) => ({
       ...s,
       unit_price: parseFloat(s.unit_price),
