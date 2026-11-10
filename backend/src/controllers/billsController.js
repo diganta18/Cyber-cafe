@@ -145,10 +145,21 @@ async function createCounterBill(req, res, next) {
     const disc = Math.max(0, parseFloat(discount) || 0);
     const total = Math.max(0, serviceCharge - disc);
 
-    // Generate unique bill number: BILL-YYMMDD-XXXX
+    // Generate unique collision-free bill number: BILL-YYMMDD-XXXX
     const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
-    const rand = Math.floor(1000 + Math.random() * 9000);
-    const billNo = `BILL-${dateStr}-${rand}`;
+    let billNo;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      const candidate = `BILL-${dateStr}-${rand}`;
+      const [existing] = await conn.query('SELECT id FROM bills WHERE bill_no = ?', [candidate]);
+      if (existing.length === 0) {
+        billNo = candidate;
+        break;
+      }
+    }
+    if (!billNo) {
+      billNo = `BILL-${dateStr}-${Date.now().toString().slice(-4)}`;
+    }
 
     const [billResult] = await conn.query(
       `INSERT INTO bills (bill_no, order_type, session_id, customer_id, time_charge, service_charge, discount, total, status)
