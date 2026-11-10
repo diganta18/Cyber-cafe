@@ -83,7 +83,9 @@ async function getAvailableSlots(req, res, next) {
   try {
     await expireNoShows();
 
-    const date = req.query.date || new Date().toISOString().slice(0, 10);
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const dateInput = req.query.date ? String(req.query.date).trim().slice(0, 10) : todayStr;
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(dateInput) ? dateInput : todayStr;
     const stationId = req.query.station_id;
 
     let stationFilter = '';
@@ -109,11 +111,12 @@ async function getAvailableSlots(req, res, next) {
     const timeSlots = [];
     for (let hour = 9; hour < 22; hour++) {
       const hStr = hour.toString().padStart(2, '0');
+      const nextHStr = (hour + 1).toString().padStart(2, '0');
       const startSlot = `${date} ${hStr}:00:00`;
-      const endSlot = `${date} ${(hour + 1).toString().padStart(2, '0')}:00:00`;
+      const endSlot = `${date} ${nextHStr}:00:00`;
 
       timeSlots.push({
-        slot_label: `${hStr}:00 - ${(hour + 1).toString().padStart(2, '0')}:00`,
+        slot_label: `${hStr}:00 - ${nextHStr}:00`,
         start_time: startSlot,
         end_time: endSlot,
       });
@@ -122,17 +125,17 @@ async function getAvailableSlots(req, res, next) {
     const result = stations.map((st) => {
       const stBookings = existingBookings.filter((b) => b.station_id === st.id);
       const slots = timeSlots.map((ts) => {
-        const slotStart = new Date(ts.start_time).getTime();
-        const slotEnd = new Date(ts.end_time).getTime();
+        const slotStartMs = new Date(ts.start_time.replace(' ', 'T')).getTime();
+        const slotEndMs = new Date(ts.end_time.replace(' ', 'T')).getTime();
 
         const isBooked = stBookings.some((b) => {
-          const bStart = new Date(b.start_time).getTime();
-          const bEnd = new Date(b.end_time).getTime();
-          return !(slotEnd <= bStart || slotStart >= bEnd);
+          const bStart = new Date(typeof b.start_time === 'string' ? b.start_time.replace(' ', 'T') : b.start_time).getTime();
+          const bEnd = new Date(typeof b.end_time === 'string' ? b.end_time.replace(' ', 'T') : b.end_time).getTime();
+          return !(slotEndMs <= bStart || slotStartMs >= bEnd);
         });
 
-        // Also check if slot is in the past for today
-        const isPast = slotEnd <= Date.now();
+        // Check if slot is in the past: if booking a past day, it's past; if today, check time; if future day, never past
+        const isPast = date < todayStr || (date === todayStr && slotEndMs <= Date.now());
 
         return {
           ...ts,
@@ -233,9 +236,20 @@ async function createBooking(req, res, next) {
       return fail(res, 'Station is already booked for this time window. Please choose another station or slot.', 409);
     }
 
-    // Generate unique 4-digit code e.g. BK-4821
-    const code = Math.floor(1000 + Math.random() * 9000);
-    const bookingCode = `BK-${code}`;
+    // Generate unique 4-digit code e.g. BK-4821 with collision protection
+    let bookingCode;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = Math.floor(1000 + Math.random() * 9000);
+      const candidate = `BK-${code}`;
+      const [existing] = await conn.query('SELECT id FROM bookings WHERE booking_code = ?', [candidate]);
+      if (existing.length === 0) {
+        bookingCode = candidate;
+        break;
+      }
+    }
+    if (!bookingCode) {
+      bookingCode = `BK-${Date.now().toString().slice(-4)}`;
+    }
 
     // Booking status logic:
     // Only if authenticated staff explicitly specifies status: 'confirmed' does it become 'confirmed'.
@@ -426,6 +440,20 @@ async function updateBookingStatus(req, res, next) {
   }
 }
 
+function maskPhone(phone) {
+  if (!phone) return '';
+  const s = String(phone).trim();
+  if (s.length <= 4) return s;
+  return s.slice(0, 2) + '*'.repeat(Math.max(0, s.length - 4)) + s.slice(-2);
+}
+
+function maskName(name) {
+  if (!name) return 'Customer';
+  const parts = String(name).trim().split(' ');
+  if (parts.length === 1) return parts[0][0] + '***';
+  return `${parts[0]} ${parts[1][0]}.`;
+}
+
 async function trackBooking(req, res, next) {
   try {
     await expireNoShows();
@@ -460,6 +488,8 @@ async function trackBooking(req, res, next) {
 
     const result = rows.map((r) => ({
       ...r,
+      customer_name: req.user ? r.customer_name : maskName(r.customer_name),
+      customer_phone: req.user ? r.customer_phone : maskPhone(r.customer_phone),
       start_time: toUtcIso(r.start_time),
       end_time: toUtcIso(r.end_time),
       created_at: toUtcIso(r.created_at),
