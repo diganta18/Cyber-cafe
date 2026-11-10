@@ -67,7 +67,20 @@ async function createPrintOrder(req, res, next) {
     }
 
     const estimatedCost = Math.round(parsedPages * parsedCopies * unitRate * 100) / 100;
-    const orderNo = `PR-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // Generate unique collision-free order number: PR-####
+    let orderNo;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const candidate = `PR-${Math.floor(1000 + Math.random() * 9000)}`;
+      const [existing] = await pool.query('SELECT id FROM print_orders WHERE order_no = ?', [candidate]);
+      if (existing.length === 0) {
+        orderNo = candidate;
+        break;
+      }
+    }
+    if (!orderNo) {
+      orderNo = `PR-${Date.now().toString().slice(-4)}`;
+    }
 
     const [result] = await pool.query(
       `INSERT INTO print_orders (
@@ -209,8 +222,19 @@ async function updatePrintOrderStatus(req, res, next) {
       const totalCost = parseFloat(order.estimated_cost);
 
       const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
-      const rand = Math.floor(1000 + Math.random() * 9000);
-      const billNo = `BILL-${dateStr}-${rand}`;
+      let billNo;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        const candidate = `BILL-${dateStr}-${rand}`;
+        const [existing] = await conn.query('SELECT id FROM bills WHERE bill_no = ?', [candidate]);
+        if (existing.length === 0) {
+          billNo = candidate;
+          break;
+        }
+      }
+      if (!billNo) {
+        billNo = `BILL-${dateStr}-${Date.now().toString().slice(-4)}`;
+      }
 
       const [billRes] = await conn.query(
         `INSERT INTO bills (bill_no, order_type, session_id, customer_id, time_charge, service_charge, discount, total, status)
@@ -235,6 +259,20 @@ async function updatePrintOrderStatus(req, res, next) {
   } finally {
     conn.release();
   }
+}
+
+function maskPhone(phone) {
+  if (!phone) return '';
+  const s = String(phone).trim();
+  if (s.length <= 4) return s;
+  return s.slice(0, 2) + '*'.repeat(Math.max(0, s.length - 4)) + s.slice(-2);
+}
+
+function maskName(name) {
+  if (!name) return 'Customer';
+  const parts = String(name).trim().split(' ');
+  if (parts.length === 1) return parts[0][0] + '***';
+  return `${parts[0]} ${parts[1][0]}.`;
 }
 
 async function trackPrintOrder(req, res, next) {
@@ -266,6 +304,8 @@ async function trackPrintOrder(req, res, next) {
 
     const result = rows.map((r) => ({
       ...r,
+      customer_name: req.user ? r.customer_name : maskName(r.customer_name),
+      customer_phone: req.user ? r.customer_phone : maskPhone(r.customer_phone),
       estimated_cost: parseFloat(r.estimated_cost),
       created_at: toUtcIso(r.created_at),
     }));
