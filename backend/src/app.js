@@ -4,6 +4,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
+const pool = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
 const authRouter = require('./routes/auth');
@@ -22,13 +23,17 @@ const app = express();
 // Security
 app.use(helmet());
 
-// CORS
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-    credentials: true,
-  })
-);
+// CORS: Safely support credentials without invalid wildcard collision
+const configuredOrigin = process.env.CORS_ORIGIN;
+const corsOptions = {
+  origin: (!configuredOrigin || configuredOrigin === '*')
+    ? true // Dynamically reflect request origin so credentials work seamlessly
+    : configuredOrigin.includes(',')
+      ? configuredOrigin.split(',').map((o) => o.trim())
+      : configuredOrigin,
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 // Logging
 app.use(morgan('dev'));
@@ -36,9 +41,31 @@ app.use(morgan('dev'));
 // Body parsing
 app.use(express.json());
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, data: { status: 'ok' } });
+// Health check with active database probe
+app.get('/api/health', async (req, res) => {
+  try {
+    const start = Date.now();
+    await pool.query('SELECT 1');
+    const latencyMs = Date.now() - start;
+    res.json({
+      success: true,
+      data: {
+        status: 'ok',
+        database: 'connected',
+        latencyMs,
+        uptime: Math.round(process.uptime()),
+      },
+    });
+  } catch (err) {
+    res.status(503).json({
+      success: false,
+      data: {
+        status: 'degraded',
+        database: 'disconnected',
+        error: err.message,
+      },
+    });
+  }
 });
 
 // Routes
