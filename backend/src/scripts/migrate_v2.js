@@ -2,20 +2,24 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 const mysql = require('mysql2/promise');
 
+const targetDb = process.env.DB_NAME || 'cybercafe';
+
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'defaultdb',
+  database: targetDb,
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
 };
 
 async function migrate() {
-  console.log('[migrate_v2] Connecting to Database...');
+  console.log(`[migrate_v2] Connecting to Database '${targetDb}' on ${dbConfig.host}:${dbConfig.port}...`);
   const conn = await mysql.createConnection(dbConfig);
 
   try {
+    await conn.query(`USE \`${targetDb}\`;`);
+    console.log(`[migrate_v2] Switched to active database \`${targetDb}\``);
     console.log('[migrate_v2] Checking columns in bills table...');
     const [cols] = await conn.query('SHOW COLUMNS FROM bills');
     const colNames = cols.map(c => c.Field);

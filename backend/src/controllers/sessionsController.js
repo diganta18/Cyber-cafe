@@ -20,14 +20,18 @@ async function getBlockMinutes(conn) {
   return rows.length > 0 ? parseInt(rows[0].value) : 15;
 }
 
-// Helper: generate bill number in a transaction
+// Helper: generate collision-proof bill number (format: CC-YYYYMMDD-XXXX)
 async function generateBillNo(conn) {
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
-  const [rows] = await conn.query(
-    "SELECT COUNT(*) as cnt FROM bills WHERE DATE(created_at) = CURDATE()"
-  );
-  const seq = (rows[0].cnt + 1).toString().padStart(4, '0');
-  return `CC-${today}-${seq}`;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const seq = Math.floor(1000 + Math.random() * 9000);
+    const candidate = `CC-${today}-${seq}`;
+    const [existing] = await conn.query('SELECT id FROM bills WHERE bill_no = ?', [candidate]);
+    if (existing.length === 0) {
+      return candidate;
+    }
+  }
+  return `CC-${today}-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
 

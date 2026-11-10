@@ -42,9 +42,25 @@ const upload = multer({
   },
 });
 
+// Resilient upload wrapper: catches busboy/multer errors and returns 400 cleanly
+function handleUpload(req, res, next) {
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ success: false, message: 'File is too large. Maximum size is 25 MB.' });
+        }
+        return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
+      }
+      return res.status(400).json({ success: false, message: err.message || 'File upload failed' });
+    }
+    next();
+  });
+}
+
 // Public endpoints
-router.post('/', upload.single('file'), optionalToken, createPrintOrder);
-router.get('/track', trackPrintOrder);
+router.post('/', handleUpload, optionalToken, createPrintOrder);
+router.get('/track', optionalToken, trackPrintOrder);
 
 // Staff endpoints
 router.get('/', verifyToken, listPrintOrders);

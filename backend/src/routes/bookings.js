@@ -14,7 +14,7 @@ const {
 
 // Public endpoints for customers / portal
 router.get('/available-slots', getAvailableSlots);
-router.get('/track', trackBooking);
+router.get('/track', optionalToken, trackBooking);
 router.post('/', optionalToken, createBooking);
 router.post('/:id/cancel', optionalToken, cancelBooking);
 

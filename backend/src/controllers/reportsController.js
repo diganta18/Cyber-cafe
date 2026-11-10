@@ -64,7 +64,15 @@ async function getRevenue(req, res, next) {
     const total_revenue = result.reduce((s, d) => s + d.revenue, 0);
     const total_bills = result.reduce((s, d) => s + d.bills, 0);
     const avg_bill = total_bills > 0 ? total_revenue / total_bills : 0;
-    const total_sessions = total_bills;
+
+    // Accurately query actual session count for the date range (not aliased to total_bills)
+    const [[sessRow]] = await pool.query(
+      `SELECT COUNT(*) as session_count
+       FROM sessions
+       WHERE DATE(start_time) >= ? AND DATE(start_time) <= ?`,
+      [from, to]
+    );
+    const total_sessions = parseInt(sessRow.session_count, 10) || 0;
 
     return ok(res, { total_revenue, total_bills, avg_bill, total_sessions, days: result });
   } catch (err) {
@@ -161,9 +169,9 @@ async function exportCSV(req, res, next) {
       return fail(res, 'Invalid export type. Use revenue or utilization', 400);
     }
 
-    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    return res.send(csv);
+    return res.status(200).send('\uFEFF' + csv);
   } catch (err) {
     next(err);
   }
