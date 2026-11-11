@@ -11,6 +11,9 @@ let customerId, stationId, sessionId;
 // Helper: clean test-specific data without touching seed data's users/stations
 async function cleanTestData() {
   await pool.query('DELETE FROM payments');
+  await pool.query('DELETE FROM bill_items');
+  await pool.query('DELETE FROM print_orders');
+  await pool.query('DELETE FROM bookings');
   await pool.query('DELETE FROM bills');
   await pool.query('DELETE FROM session_services');
   await pool.query('DELETE FROM sessions');
@@ -129,6 +132,9 @@ describe('Session Tests', () => {
   });
 
   test('add service to session decrements stock', async () => {
+    // Ensure sufficient stock
+    await pool.query("UPDATE services SET stock_qty = 50 WHERE name = 'Tea'");
+
     // Get the Tea service (has stock)
     const [services] = await pool.query("SELECT id, stock_qty FROM services WHERE name = 'Tea' AND is_active = 1");
     const teaService = services[0];
