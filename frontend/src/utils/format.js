@@ -1,12 +1,14 @@
-// MySQL with dateStrings:true returns datetime strings like "2026-10-13 19:00:00" (local time).
-// JS Date needs the T separator to parse reliably — the space form can be ambiguous on some browsers.
+// MySQL with dateStrings:true returns UTC datetime strings like "2026-10-13 19:00:00".
+// Appending 'Z' tells the browser it is UTC, so Date formats it in the user's local timezone (e.g. IST).
 function asUTC(dt) {
   if (!dt) return dt
-  const s = String(dt)
+  const s = String(dt).trim()
   // Already has timezone info — leave as-is
   if (/Z$|[+-]\d{2}:\d{2}$/.test(s)) return s
-  // Just normalize the MySQL space separator to T (no Z — times are already local)
-  return s.replace(' ', 'T')
+  // Date-only strings like YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  // Normalize MySQL space separator to T and append Z
+  return s.replace(' ', 'T') + 'Z'
 }
 
 // Format currency as ₹1,234.50
@@ -59,7 +61,7 @@ export function elapsedSeconds(startTime, serverTimeIso) {
   const serverNow = serverTimeIso ? new Date(asUTC(serverTimeIso)).getTime() : now
   const offset = now - serverNow   // client ahead = positive
   const start = new Date(asUTC(startTime)).getTime()
-  return Math.floor((now - offset - start) / 1000)
+  return Math.max(0, Math.floor((now - offset - start) / 1000))
 }
 
 // Format seconds as H:MM:SS
