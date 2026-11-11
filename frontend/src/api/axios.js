@@ -13,13 +13,21 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// On 401, clear token and redirect to login
+// On 401, clear token and redirect to login (only when not on public customer routes)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      const currentPath = window.location.pathname || ''
+      const isPublicRoute =
+        currentPath.startsWith('/portal') ||
+        currentPath.startsWith('/login') ||
+        currentPath.startsWith('/book')
+
+      if (!isPublicRoute) {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
