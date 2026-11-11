@@ -117,6 +117,7 @@
   }
   .badge-available   { @apply bg-accent/15 text-accent border-accent; }
   .badge-occupied    { @apply bg-danger/15 text-danger border-danger; }
+  .badge-reserved    { @apply bg-amber-500/20 text-amber-900 border-amber-600; }
   .badge-maintenance { @apply bg-[#ECE4A9] text-ink border-[#2A2407]/40; }
   .badge-unpaid      { @apply bg-danger/15 text-danger border-danger; }
   .badge-paid        { @apply bg-accent/15 text-accent border-accent; }
@@ -250,7 +251,8 @@ select.input option {
   border-radius: 12px;
   gap: 3px;
 }
-.animated-btn-sm svg {
+.animated-btn-sm svg.arr-1,
+.animated-btn-sm svg.arr-2 {
   position: absolute;
   width: 15px;
   height: 15px;
@@ -291,7 +293,8 @@ select.input option {
   border-radius: 14px;
   gap: 4px;
 }
-.animated-btn-md svg {
+.animated-btn-md svg.arr-1,
+.animated-btn-md svg.arr-2 {
   position: absolute;
   width: 18px;
   height: 18px;
@@ -333,7 +336,8 @@ select.input option {
   border-radius: 16px;
   gap: 4px;
 }
-.animated-btn-lg svg {
+.animated-btn-lg svg.arr-1,
+.animated-btn-lg svg.arr-2 {
   position: absolute;
   width: 22px;
   height: 22px;
@@ -368,6 +372,32 @@ select.input option {
 .animated-btn-lg:hover:not(:disabled) .text { transform: translateX(12px); }
 .animated-btn-lg:hover:not(:disabled) .circle { width: 420px; height: 420px; opacity: 1; }
 
+/* In-flow icons inside .text */
+.animated-button .text svg {
+  position: static !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  flex-shrink: 0 !important;
+  z-index: 2 !important;
+}
+
+/* Compact / No-arrows mode */
+.animated-button.no-arrows {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+.animated-button.no-arrows .text {
+  transform: none !important;
+}
+.animated-button.no-arrows:hover:not(:disabled) .text {
+  transform: none !important;
+}
+.animated-button.no-arrows .circle {
+  display: none;
+}
+
 /* ── Color Scheme Variants ─────────────────────── */
 /* Accent / Vibrant Amber Orange (#EC7E00) */
 .animated-variant-accent {
@@ -376,7 +406,8 @@ select.input option {
   border-color: #2A2407;
   box-shadow: 2px 2px 0px #2A2407;
 }
-.animated-variant-accent svg {
+.animated-variant-accent svg.arr-1,
+.animated-variant-accent svg.arr-2 {
   fill: #FFFFFF;
 }
 .animated-variant-accent .circle {
@@ -387,10 +418,40 @@ select.input option {
   transform: translate(-1px, -1px);
   color: #FFFFFF;
 }
-.animated-variant-accent:hover:not(:disabled) svg {
+.animated-variant-accent:hover:not(:disabled) svg.arr-1,
+.animated-variant-accent:hover:not(:disabled) svg.arr-2 {
   fill: #FFFFFF;
 }
 .animated-variant-accent:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #2A2407;
+}
+
+/* Success / Emerald Green Variant (#16A34A) */
+.animated-variant-success {
+  background-color: #16A34A;
+  color: #FFFFFF;
+  border-color: #2A2407;
+  box-shadow: 2px 2px 0px #2A2407;
+}
+.animated-variant-success svg.arr-1,
+.animated-variant-success svg.arr-2 {
+  fill: #FFFFFF;
+}
+.animated-variant-success .circle {
+  background-color: #15803D;
+}
+.animated-variant-success:hover:not(:disabled) {
+  box-shadow: 3px 3px 0px #2A2407;
+  transform: translate(-1px, -1px);
+  background-color: #15803D;
+  color: #FFFFFF;
+}
+.animated-variant-success:hover:not(:disabled) svg.arr-1,
+.animated-variant-success:hover:not(:disabled) svg.arr-2 {
+  fill: #FFFFFF;
+}
+.animated-variant-success:active:not(:disabled) {
   transform: translate(1px, 1px);
   box-shadow: 1px 1px 0px #2A2407;
 }
@@ -402,7 +463,8 @@ select.input option {
   border-color: #2A2407;
   box-shadow: 2px 2px 0px #2A2407;
 }
-.animated-variant-surface svg {
+.animated-variant-surface svg.arr-1,
+.animated-variant-surface svg.arr-2 {
   fill: #2A2407;
 }
 .animated-variant-surface .circle {
@@ -413,7 +475,8 @@ select.input option {
   transform: translate(-1px, -1px);
   color: #EC7E00;
 }
-.animated-variant-surface:hover:not(:disabled) svg {
+.animated-variant-surface:hover:not(:disabled) svg.arr-1,
+.animated-variant-surface:hover:not(:disabled) svg.arr-2 {
   fill: #EC7E00;
 }
 .animated-variant-surface:active:not(:disabled) {
@@ -428,7 +491,8 @@ select.input option {
   border-color: #2A2407;
   box-shadow: 2px 2px 0px #2A2407;
 }
-.animated-variant-dark svg {
+.animated-variant-dark svg.arr-1,
+.animated-variant-dark svg.arr-2 {
   fill: #FFFFFF;
 }
 .animated-variant-dark .circle {
@@ -439,7 +503,8 @@ select.input option {
   transform: translate(-1px, -1px);
   color: #FFFFFF;
 }
-.animated-variant-dark:hover:not(:disabled) svg {
+.animated-variant-dark:hover:not(:disabled) svg.arr-1,
+.animated-variant-dark:hover:not(:disabled) svg.arr-2 {
   fill: #FFFFFF;
 }
 .animated-variant-dark:active:not(:disabled) {
@@ -454,7 +519,8 @@ select.input option {
   border-color: #2A2407;
   box-shadow: 2px 2px 0px #2A2407;
 }
-.animated-variant-danger svg {
+.animated-variant-danger svg.arr-1,
+.animated-variant-danger svg.arr-2 {
   fill: #FFFFFF;
 }
 .animated-variant-danger .circle {
@@ -465,7 +531,8 @@ select.input option {
   transform: translate(-1px, -1px);
   color: #FFFFFF;
 }
-.animated-variant-danger:hover:not(:disabled) svg {
+.animated-variant-danger:hover:not(:disabled) svg.arr-1,
+.animated-variant-danger:hover:not(:disabled) svg.arr-2 {
   fill: #FFFFFF;
 }
 .animated-variant-danger:active:not(:disabled) {
