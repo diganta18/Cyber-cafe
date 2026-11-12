@@ -3,16 +3,18 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   Monitor, Users, Clock, Receipt, Package,
-  BarChart2, UserCog, LayoutDashboard, Menu, X, LogOut, ChevronDown, ShieldCheck
+  BarChart2, UserCog, LayoutDashboard, Menu, X, LogOut, ChevronDown, ShieldCheck,
+  Calendar, ExternalLink
 } from 'lucide-react'
 
 const allNavLinks = [
   { to: '/',          icon: LayoutDashboard, label: 'Dashboard',        roles: ['admin','staff'] },
   { to: '/stations',  icon: Monitor,         label: 'Stations',         roles: ['admin','staff'] },
   { to: '/sessions',  icon: Clock,           label: 'Active Sessions',  roles: ['admin','staff'] },
+  { to: '/bookings',  icon: Calendar,        label: 'Bookings & Prints', roles: ['admin','staff'] },
   { to: '/customers', icon: Users,           label: 'Customers',        roles: ['admin','staff'] },
   { to: '/bills',     icon: Receipt,         label: 'Bills',            roles: ['admin','staff'] },
-  { to: '/services',  icon: Package,         label: 'Services & Stock', roles: ['admin'] },
+  { to: '/services',  icon: Package,         label: 'Services & Stock', roles: ['admin', 'staff'] },
   { to: '/reports',   icon: BarChart2,       label: 'Reports',          roles: ['admin'] },
   { to: '/staff',     icon: UserCog,         label: 'Staff',            roles: ['admin'] },
 ]
