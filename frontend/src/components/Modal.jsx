@@ -31,29 +31,29 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px] overflow-y-auto"
       onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       <div className={`
-        bg-surface border border-line rounded-2xl
-        shadow-[0_24px_48px_-8px_rgba(24,24,27,0.18),0_0_0_1px_rgba(24,24,27,0.04)]
-        w-full ${sizes[size]} max-h-[90vh] flex flex-col
-        animate-fade-up
+        bg-surface border-2 border-[#2A2407] rounded-[24px]
+        shadow-[6px_6px_0px_#2A2407]
+        w-full ${sizes[size]} flex flex-col
+        animate-fade-up relative overflow-visible my-auto
       `}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
-          <h2 id="modal-title" className="text-base font-bold text-ink tracking-tight">{title}</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#2A2407] bg-[#ECE4A9] rounded-t-[22px]">
+          <h2 id="modal-title" className="text-base font-extrabold text-ink tracking-tight font-geist">{title}</h2>
           <button
             onClick={onClose}
-            className="text-ink-faint hover:text-ink hover:bg-surface-raised p-1.5 rounded-lg transition-all"
+            className="text-ink hover:text-white hover:bg-[#2A2407] border-2 border-[#2A2407] p-1.5 rounded-xl transition-all shadow-[1px_1px_0px_#2A2407] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
             aria-label="Close modal"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="overflow-y-auto flex-1 px-6 py-5">
+        <div className="px-6 py-5 overflow-visible">
           {children}
         </div>
       </div>
