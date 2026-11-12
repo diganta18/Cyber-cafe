@@ -13,10 +13,10 @@ export default function Table({ columns, data, loading, emptyMessage = 'No data 
   if (!data || data.length === 0) {
     return (
       <div className="text-center py-20 px-6">
-        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-surface-raised border border-line mb-4">
-          <SearchX className="h-6 w-6 text-ink-faint" />
+        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-[#ECE4A9] border-2 border-[#2A2407] shadow-[2px_2px_0px_#2A2407] mb-4">
+          <SearchX className="h-6 w-6 text-ink" />
         </div>
-        <p className="text-sm font-medium text-ink-muted">{emptyMessage}</p>
+        <p className="text-sm font-bold text-ink-muted">{emptyMessage}</p>
       </div>
     )
   }
