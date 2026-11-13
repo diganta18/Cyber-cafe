@@ -147,3 +147,6 @@ backend/uploads/*
 *.xls
 *.pptx
 *.ppt
+
+# SRS and internal documentation reports
+SRS_INPUT_REPORT.md
