@@ -21,25 +21,25 @@ function ToastItem({ toast, onRemove }) {
 
   return (
     <div className={`
-      pointer-events-auto flex items-start gap-3 px-4 py-3.5 rounded-xl
-      shadow-[0_8px_24px_-4px_rgba(24,24,27,0.14),0_0_0_1px_rgba(24,24,27,0.04)]
+      pointer-events-auto flex items-start gap-3 px-4 py-3.5 rounded-xl border-2 border-[#2A2407]
+      shadow-[3px_3px_0px_#2A2407]
       animate-slide-in bg-surface
       ${isSuccess
-        ? 'border-l-4 border-l-success'
-        : 'border-l-4 border-l-danger'
+        ? 'border-l-[6px] border-l-accent'
+        : 'border-l-[6px] border-l-danger'
       }
     `}>
       {isSuccess
-        ? <CheckCircle2 className="h-4.5 w-4.5 text-success flex-shrink-0 mt-0.5" />
-        : <XCircle className="h-4.5 w-4.5 text-danger flex-shrink-0 mt-0.5" />
+        ? <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+        : <XCircle className="h-5 w-5 text-danger flex-shrink-0 mt-0.5" />
       }
-      <p className="text-sm font-medium text-ink flex-1 leading-snug">{toast.message}</p>
+      <p className="text-sm font-bold text-ink flex-1 leading-snug">{toast.message}</p>
       <button
         onClick={() => onRemove(toast.id)}
-        className="text-ink-faint hover:text-ink transition-colors mt-0.5 flex-shrink-0"
+        className="text-ink-muted hover:text-ink transition-colors mt-0.5 flex-shrink-0 cursor-pointer"
         aria-label="Dismiss notification"
       >
-        <X className="h-3.5 w-3.5" />
+        <X className="h-4 w-4" />
       </button>
     </div>
   )
