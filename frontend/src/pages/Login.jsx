@@ -31,7 +31,7 @@ export default function Login({ toast }) {
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
+    <main className="min-h-screen bg-bg flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
       {/* Background ambient warmth */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-accent/[0.04] rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-warning/[0.04] rounded-full blur-3xl pointer-events-none" />
@@ -57,14 +57,15 @@ export default function Login({ toast }) {
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {/* Username / Email Field */}
             <div>
+              <label htmlFor="username" className="sr-only">Email ID or Username</label>
               <div className="flex border-2 border-[#2A2407] rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-[#EC7E00] focus-within:border-[#EC7E00] transition-all">
-                <div className="w-12 bg-[#2A2407] flex items-center justify-center text-white border-r-2 border-[#2A2407] flex-shrink-0">
+                <div className="w-12 bg-[#2A2407] flex items-center justify-center text-white border-r-2 border-[#2A2407] flex-shrink-0" aria-hidden="true">
                   <User className="h-5 w-5" />
                 </div>
                 <input
                   id="username"
                   type="text"
-                  className="flex-1 px-3.5 py-2.5 sm:py-3 text-sm text-[#2A2407] placeholder:text-[#948A63] bg-transparent focus:outline-none font-medium"
+                  className="flex-1 px-3.5 py-2.5 sm:py-3 text-sm text-[#2A2407] placeholder:text-[#645B38] bg-transparent focus:outline-none font-medium"
                   placeholder="Email ID / Username"
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
@@ -76,14 +77,15 @@ export default function Login({ toast }) {
 
             {/* Password Field */}
             <div>
+              <label htmlFor="password" className="sr-only">Password</label>
               <div className="flex border-2 border-[#2A2407] rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-[#EC7E00] focus-within:border-[#EC7E00] transition-all">
-                <div className="w-12 bg-[#2A2407] flex items-center justify-center text-white border-r-2 border-[#2A2407] flex-shrink-0">
+                <div className="w-12 bg-[#2A2407] flex items-center justify-center text-white border-r-2 border-[#2A2407] flex-shrink-0" aria-hidden="true">
                   <Lock className="h-5 w-5" />
                 </div>
                 <input
                   id="password"
                   type={showPw ? 'text' : 'password'}
-                  className="flex-1 px-3.5 py-2.5 sm:py-3 text-sm text-[#2A2407] placeholder:text-[#948A63] bg-transparent focus:outline-none font-medium"
+                  className="flex-1 px-3.5 py-2.5 sm:py-3 text-sm text-[#2A2407] placeholder:text-[#645B38] bg-transparent focus:outline-none font-medium"
                   placeholder="Password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -93,7 +95,7 @@ export default function Login({ toast }) {
                 <button
                   type="button"
                   onClick={() => setShowPw(!showPw)}
-                  className="px-3 text-[#948A63] hover:text-[#2A2407] transition-colors focus:outline-none flex items-center justify-center"
+                  className="px-3 text-[#4F4723] hover:text-[#2A2407] transition-colors focus:outline-none flex items-center justify-center"
                   aria-label={showPw ? 'Hide password' : 'Show password'}
                 >
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -102,8 +104,8 @@ export default function Login({ toast }) {
             </div>
 
             {/* Remember Me & Forgot Password Row */}
-            <div className="flex items-center justify-between text-xs text-[#645B38] pt-1">
-              <label className="flex items-center gap-2 cursor-pointer font-medium hover:text-[#2A2407] transition-colors">
+            <div className="flex items-center justify-between text-xs pt-1">
+              <label className="flex items-center gap-2 cursor-pointer font-semibold text-[#3D3717] hover:text-[#2A2407] transition-colors">
                 <input
                   type="checkbox"
                   checked={rememberMe}
@@ -112,7 +114,7 @@ export default function Login({ toast }) {
                 />
                 <span>Remember me</span>
               </label>
-              <span className="text-[11px] italic text-[#948A63] hover:text-[#2A2407] cursor-pointer transition-colors">
+              <span className="text-[11px] italic font-medium text-[#4F4723] hover:text-[#2A2407] cursor-pointer transition-colors underline decoration-dotted">
                 Forgot Password?
               </span>
             </div>
@@ -131,7 +133,7 @@ export default function Login({ toast }) {
                 type="submit"
                 id="login-submit"
                 disabled={loading}
-                className="w-full bg-[#EC7E00] hover:bg-[#D46F00] active:scale-[0.98] text-white font-extrabold text-sm sm:text-[15px] py-3 sm:py-3.5 tracking-[0.2em] rounded-md border-2 border-[#2A2407] shadow-[2px_2px_0px_#2A2407] hover:shadow-[3px_3px_0px_#2A2407] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer uppercase"
+                className="w-full bg-[#EC7E00] hover:bg-[#D46F00] active:scale-[0.98] text-[#1C1805] font-extrabold text-sm sm:text-[15px] py-3 sm:py-3.5 tracking-[0.2em] rounded-md border-2 border-[#2A2407] shadow-[2px_2px_0px_#2A2407] hover:shadow-[3px_3px_0px_#2A2407] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer uppercase"
               >
                 {loading && <Spinner size="sm" />}
                 <span>{loading ? 'LOGGING IN…' : 'LOGIN'}</span>
@@ -148,7 +150,7 @@ export default function Login({ toast }) {
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#2A2407] text-[#ECE4A9] flex items-center justify-center border-2 border-[#2A2407] shadow-[1px_1px_0px_#2A2407] flex-shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-[#2A2407] text-[#ECE4A9] flex items-center justify-center border-2 border-[#2A2407] shadow-[1px_1px_0px_#2A2407] flex-shrink-0 group-hover:scale-105 transition-transform" aria-hidden="true">
                   <Gamepad2 className="w-5 h-5 text-[#EC7E00]" />
                 </div>
                 <div>
@@ -156,16 +158,16 @@ export default function Login({ toast }) {
                     <p className="text-xs font-extrabold text-[#2A2407] uppercase tracking-wider">
                       Customer Portal
                     </p>
-                    <span className="text-[9px] font-extrabold uppercase bg-[#EC7E00] text-white px-1.5 py-0.5 rounded tracking-wider">
+                    <span className="text-[9px] font-extrabold uppercase bg-[#2A2407] text-[#FAF7EB] px-1.5 py-0.5 rounded tracking-wider">
                       No Login Needed
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#645B38] font-semibold mt-0.5">
+                  <p className="text-[11px] text-[#4F4723] font-semibold mt-0.5">
                     Book Gaming / PC Slots & Send Printouts
                   </p>
                 </div>
               </div>
-              <div className="h-8 w-8 rounded-lg bg-white border-2 border-[#2A2407] shadow-[1px_1px_0px_#2A2407] flex items-center justify-center flex-shrink-0 group-hover:bg-[#EC7E00] group-hover:text-white transition-colors">
+              <div className="h-8 w-8 rounded-lg bg-white border-2 border-[#2A2407] shadow-[1px_1px_0px_#2A2407] flex items-center justify-center flex-shrink-0 group-hover:bg-[#EC7E00] group-hover:text-white transition-colors" aria-hidden="true">
                 <ArrowRight className="w-4 h-4 text-[#2A2407] group-hover:text-white group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
@@ -173,10 +175,10 @@ export default function Login({ toast }) {
         </div>
 
         {/* Footer info */}
-        <p className="text-center text-xs text-[#948A63] mt-7">
+        <p className="text-center text-xs text-[#574F2F] mt-7">
           Cyber Café Management System © {new Date().getFullYear()}
         </p>
       </div>
-    </div>
+    </main>
   )
 }
