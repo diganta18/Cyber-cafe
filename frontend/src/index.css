@@ -1,13 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap');
+/* Google Fonts are loaded via a single <link> in index.html — do NOT duplicate here */
 
 @font-face {
   font-family: 'Pricedown';
   src: url('/fonts/pricedown.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
+  font-display: swap; /* show fallback font immediately, swap when loaded */
 }
 
 @tailwind base;

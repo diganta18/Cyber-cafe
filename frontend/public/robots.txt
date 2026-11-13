@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /api/
+Disallow: /login
+
+# Public pages
+Allow: /portal
+Allow: /book
+
+Sitemap: https://cyber-cafe-amber.vercel.app/sitemap.xml
+
