@@ -3,6 +3,7 @@ import api from '../api/axios'
 import { formatCurrency, formatDate, apiError } from '../utils/format'
 import StatCard from '../components/StatCard'
 import Spinner from '../components/Spinner'
+import Button from '../components/Button'
 import { BarChart2, Download, TrendingUp, Monitor, Calendar } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -14,9 +15,9 @@ const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString().slice
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div style={{ background: '#FFFFFF', border: '1px solid #E4E2DC', borderRadius: '8px', padding: '10px 14px' }}>
-        <p style={{ color: '#6E6D68', fontSize: '11px', marginBottom: '4px' }}>{label}</p>
-        <p style={{ color: '#3B7A57', fontSize: '14px', fontWeight: '700', margin: 0 }}>{formatCurrency(payload[0].value)}</p>
+      <div style={{ background: '#FFFFFF', border: '1px solid #DDD496', borderRadius: '8px', padding: '10px 14px' }}>
+        <p style={{ color: '#645B38', fontSize: '11px', marginBottom: '4px' }}>{label}</p>
+        <p style={{ color: '#EC7E00', fontSize: '14px', fontWeight: '700', margin: 0 }}>{formatCurrency(payload[0].value)}</p>
       </div>
     )
   }
@@ -103,37 +104,34 @@ export default function Reports({ toast }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Reports</h1>
-          <p className="text-sm text-ink-muted mt-0.5">{from} → {to}</p>
+          <p className="text-xs text-ink-muted mt-1">{from} → {to}</p>
         </div>
-        <button id="export-report-btn" className="btn-secondary" onClick={handleExport} disabled={exporting}>
-          {exporting ? <Spinner size="sm" /> : <Download className="h-4 w-4" />}
-          Export CSV
-        </button>
+        <Button id="export-report-btn" variant="surface" size="sm" onClick={handleExport} loading={exporting}>
+          {exporting ? 'Exporting…' : 'Export CSV'}
+        </Button>
       </div>
 
       {/* Date Range */}
-      <div className="card p-4 flex items-center gap-4 flex-wrap">
-        <Calendar className="h-4 w-4 text-ink-faint flex-shrink-0" />
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-ink-faint uppercase tracking-wide">From</label>
-          <input type="date" className="input w-38 text-sm" value={from} max={to} onChange={(e) => setFrom(e.target.value)} id="report-from" />
+      <div className="card p-4 flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-4 flex-wrap">
+          <Calendar className="h-4 w-4 text-ink-faint flex-shrink-0" />
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-ink-muted">From</label>
+            <input type="date" className="input w-36 text-xs py-1.5" value={from} max={to} onChange={(e) => setFrom(e.target.value)} id="report-from" />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-ink-muted">To</label>
+            <input type="date" className="input w-36 text-xs py-1.5" value={to} min={from} max={today} onChange={(e) => setTo(e.target.value)} id="report-to" />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-ink-faint uppercase tracking-wide">To</label>
-          <input type="date" className="input w-38 text-sm" value={to} min={from} max={today} onChange={(e) => setTo(e.target.value)} id="report-to" />
-        </div>
-        <div className="flex gap-1.5 ml-auto">
+        <div className="tab-group">
           {quickRanges.map(({ label, days }) => {
             const rangeFrom = new Date(Date.now() - days * 86400 * 1000).toISOString().slice(0, 10)
             const isActive = from === rangeFrom && to === today
             return (
               <button
                 key={label}
-                className={`px-3 py-1.5 text-xs rounded-lg font-semibold border transition-all ${
-                  isActive
-                    ? 'bg-accent text-white border-accent shadow-sm'
-                    : 'bg-surface-raised border-line text-ink-faint hover:text-ink-muted hover:border-line/60'
-                }`}
+                className={`tab-item ${isActive ? 'tab-item-active' : ''}`}
                 onClick={() => {
                   setFrom(rangeFrom)
                   setTo(today)
@@ -152,23 +150,19 @@ export default function Reports({ toast }) {
         <>
           {/* Summary Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Total Revenue"  value={formatCurrency(revenue?.total_revenue ?? 0)} icon={TrendingUp} color="green"  />
-            <StatCard label="Total Bills"    value={revenue?.total_bills ?? 0}                   icon={BarChart2}  color="blue"   />
-            <StatCard label="Avg Bill Value" value={formatCurrency(revenue?.avg_bill ?? 0)}      icon={TrendingUp} color="amber"  />
-            <StatCard label="Total Sessions" value={revenue?.total_sessions ?? 0}               icon={Monitor}    color="purple" />
+            <StatCard label="Total revenue"      value={formatCurrency(revenue?.total_revenue ?? 0)} icon={TrendingUp} sub="Settled during period" />
+            <StatCard label="Total bills"        value={revenue?.total_bills ?? 0}                   icon={BarChart2}  sub="Generated invoices" />
+            <StatCard label="Average bill value" value={formatCurrency(revenue?.avg_bill ?? 0)}      icon={TrendingUp} sub="Per settled customer" />
+            <StatCard label="Total sessions"     value={revenue?.total_sessions ?? 0}               icon={Monitor}    sub="Total floor sessions" />
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1.5">
+          <div className="tab-group">
             {tabs.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`px-4 py-2 text-sm rounded-lg font-semibold transition-all duration-150 ${
-                  activeTab === key
-                    ? 'bg-accent/15 text-accent border border-accent/30'
-                    : 'bg-surface-raised border border-line text-ink-faint hover:text-ink-muted hover:border-line/60'
-                }`}
+                className={`tab-item ${activeTab === key ? 'tab-item-active' : ''}`}
               >
                 {label}
               </button>
@@ -184,11 +178,11 @@ export default function Reports({ toast }) {
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E4E2DC" vertical={false} />
-                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#6E6D68' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: '#6E6D68' }} tickFormatter={(v) => `₹${v}`} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(59,122,87,0.06)' }} />
-                    <Bar dataKey="revenue" fill="#3B7A57" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#DDD6A4" vertical={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#635B3B' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: '#635B3B' }} tickFormatter={(v) => `₹${v}`} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(236,126,0,0.08)' }} />
+                    <Bar dataKey="revenue" fill="#EC7E00" radius={[4, 4, 0, 0]} maxBarSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -235,7 +229,7 @@ export default function Reports({ toast }) {
                       <p className="text-sm font-bold text-ink truncate">{c.customer_name || c.name}</p>
                       <p className="text-xs text-ink-faint">{c.session_count || c.sessions} sessions</p>
                     </div>
-                    <span className="font-bold text-success font-mono">{formatCurrency(c.total_spent)}</span>
+                    <span className="font-extrabold text-accent font-mono">{formatCurrency(c.total_spent)}</span>
                   </div>
                 ))}
                 {topCustomers.length === 0 && <p className="text-center text-ink-faint text-sm py-10">No customer data</p>}
