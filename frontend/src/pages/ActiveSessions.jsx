@@ -4,7 +4,10 @@ import api from '../api/axios'
 import { formatCurrency, formatTimer, elapsedSeconds, apiError } from '../utils/format'
 import Modal from '../components/Modal'
 import Spinner from '../components/Spinner'
-import { Plus, Trash2, StopCircle, RefreshCw, Clock, Zap, User } from 'lucide-react'
+import Button from '../components/Button'
+import Select from '../components/Select'
+import CounterSaleModal from '../components/CounterSaleModal'
+import { Plus, Trash2, StopCircle, RefreshCw, Clock, Zap, User, ShoppingBag } from 'lucide-react'
 
 function LiveTimer({ startTime }) {
   const [secs, setSecs] = useState(() => elapsedSeconds(startTime))
@@ -26,6 +29,7 @@ export default function ActiveSessions({ toast }) {
   const [startForm, setStartForm] = useState({ customer_id: '', station_id: '' })
   const [startErrors, setStartErrors] = useState({})
   const [starting, setStarting] = useState(false)
+  const [counterModal, setCounterModal] = useState(false)
 
   const [serviceModal, setServiceModal] = useState(null)
   const [services, setServices] = useState([])
@@ -158,13 +162,17 @@ export default function ActiveSessions({ toast }) {
             {sessions.length} active session{sessions.length !== 1 ? 's' : ''} currently running
           </p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={fetchSessions} className="btn-ghost" aria-label="Refresh">
-            <RefreshCw className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          <button onClick={fetchSessions} className="btn-dark" aria-label="Refresh">
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline text-xs font-bold">Refresh</span>
           </button>
-          <button id="start-session-btn" onClick={openStart} className="btn-primary">
-            <Plus className="h-4 w-4" /> New session
-          </button>
+          <Button id="quick-counter-btn" variant="secondary" size="sm" onClick={() => setCounterModal(true)}>
+            <ShoppingBag className="h-4 w-4 mr-1.5" /> Quick counter sale
+          </Button>
+          <Button id="start-session-btn" size="sm" onClick={openStart}>
+            New session
+          </Button>
         </div>
       </div>
 
@@ -177,9 +185,9 @@ export default function ActiveSessions({ toast }) {
           </div>
           <p className="text-sm font-semibold text-ink mb-1 font-geist">No active sessions</p>
           <p className="text-xs text-ink-muted mb-4">Start a session to allocate a station to a customer</p>
-          <button onClick={openStart} className="btn-primary mx-auto">
-            <Plus className="h-4 w-4" /> Start session
-          </button>
+          <Button size="sm" onClick={openStart} className="mx-auto">
+            Start session
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -189,34 +197,34 @@ export default function ActiveSessions({ toast }) {
               <div>
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-accent/10 text-accent border border-accent/20">
-                      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-[#EC7E00]/15 text-[#EC7E00] border-2 border-[#EC7E00]">
+                      <span className="h-2 w-2 rounded-full bg-accent" />
                       Live
                     </span>
-                    <span className="text-xs font-medium text-ink-muted">{sess.station_name}</span>
+                    <span className="text-xs font-bold text-ink">{sess.station_name}</span>
                   </div>
                   <LiveTimer startTime={sess.start_time} />
                 </div>
 
                 <div className="flex items-center gap-2.5 mb-2">
-                  <div className="h-7 w-7 rounded-md bg-surface-raised border border-line flex items-center justify-center flex-shrink-0 text-ink-muted font-semibold text-xs">
+                  <div className="h-8 w-8 rounded-lg bg-[#ECE4A9] border-2 border-[#2A2407] shadow-[1px_1px_0px_#2A2407] flex items-center justify-center flex-shrink-0 text-ink font-bold text-xs">
                     {sess.customer_name?.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-ink truncate font-geist">{sess.customer_name}</p>
-                    <p className="text-xs text-ink-faint">{sess.customer_phone || `${formatCurrency(sess.hourly_rate)}/hr`}</p>
+                    <p className="text-sm font-bold text-ink truncate font-geist">{sess.customer_name}</p>
+                    <p className="text-xs text-ink-muted font-medium">{sess.customer_phone || `${formatCurrency(sess.hourly_rate)}/hr`}</p>
                   </div>
                 </div>
 
                 {/* Services */}
                 {sess.services && sess.services.length > 0 && (
-                  <div className="mt-3 bg-surface-raised border border-line rounded-lg p-2.5 space-y-1.5">
-                    <p className="text-[11px] font-medium text-ink-muted">Add-ons</p>
+                  <div className="mt-3 bg-[#ECE4A9] border-2 border-[#2A2407] rounded-xl p-3 space-y-1.5 shadow-[2px_2px_0px_#2A2407]">
+                    <p className="text-[11px] font-bold text-ink uppercase tracking-wide">Add-ons</p>
                     {sess.services.map((sv) => (
-                      <div key={sv.id} className="flex items-center justify-between text-xs">
-                        <span className="text-ink-muted">{sv.name} × {sv.quantity}</span>
+                      <div key={sv.id} className="flex items-center justify-between text-xs font-medium">
+                        <span className="text-ink">{sv.name} × {sv.quantity}</span>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-ink">{formatCurrency(sv.line_total)}</span>
+                          <span className="font-bold text-ink">{formatCurrency(sv.line_total)}</span>
                           <button
                             onClick={() => handleRemoveService(sess.id, sv.id)}
                             className="text-ink-faint hover:text-danger p-0.5"
@@ -249,41 +257,40 @@ export default function ActiveSessions({ toast }) {
       <Modal isOpen={startModal} onClose={() => setStartModal(false)} title="Start New Session" size="sm">
         <div className="space-y-4">
           <div>
-            <label className="label">Customer *</label>
-            <select
-              className={`input ${startErrors.customer_id ? 'input-error' : ''}`}
+            <Select
+              id="session-customer-select"
+              label="Customer *"
               value={startForm.customer_id}
               onChange={(e) => setStartForm({ ...startForm, customer_id: e.target.value })}
-              id="session-customer-select"
-            >
-              <option value="">Select customer…</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}{c.phone ? ` — ${c.phone}` : ''}</option>
-              ))}
-            </select>
+              options={customers.map((c) => ({
+                value: c.id,
+                label: `${c.name}${c.phone ? ` — ${c.phone}` : ''}`,
+              }))}
+              placeholder="Select customer…"
+              error={!!startErrors.customer_id}
+            />
             {startErrors.customer_id && <p className="error-text">{startErrors.customer_id}</p>}
           </div>
           <div>
-            <label className="label">Station *</label>
-            <select
-              className={`input ${startErrors.station_id ? 'input-error' : ''}`}
+            <Select
+              id="session-station-select"
+              label="Station *"
               value={startForm.station_id}
               onChange={(e) => setStartForm({ ...startForm, station_id: e.target.value })}
-              id="session-station-select"
-            >
-              <option value="">Select available station…</option>
-              {stations.map((s) => (
-                <option key={s.id} value={s.id}>{s.name} ({s.type}) — {formatCurrency(s.hourly_rate)}/hr</option>
-              ))}
-            </select>
+              options={stations.map((s) => ({
+                value: s.id,
+                label: `${s.name} (${s.type}) — ${formatCurrency(s.hourly_rate)}/hr`,
+              }))}
+              placeholder="Select available station…"
+              error={!!startErrors.station_id}
+            />
             {startErrors.station_id && <p className="error-text">{startErrors.station_id}</p>}
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button className="btn-secondary" onClick={() => setStartModal(false)}>Cancel</button>
-            <button id="confirm-start-btn" className="btn-primary" onClick={handleStart} disabled={starting}>
-              {starting ? <Spinner size="sm" /> : <Zap className="h-4 w-4" />}
+            <Button id="confirm-start-btn" size="sm" onClick={handleStart} loading={starting}>
               {starting ? 'Starting…' : 'Start Session'}
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
@@ -292,20 +299,18 @@ export default function ActiveSessions({ toast }) {
       <Modal isOpen={!!serviceModal} onClose={() => setServiceModal(null)} title={`Add Service — ${serviceModal?.station_name}`} size="sm">
         <div className="space-y-4">
           <div>
-            <label className="label">Service *</label>
-            <select
-              className={`input ${svcErrors.service_id ? 'input-error' : ''}`}
+            <Select
+              id="session-service-select"
+              label="Service *"
               value={svcForm.service_id}
               onChange={(e) => setSvcForm({ ...svcForm, service_id: e.target.value })}
-            >
-              <option value="">Select service…</option>
-              {services.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} — {formatCurrency(s.price)}
-                  {s.track_stock ? ` (stock: ${s.stock_qty})` : ''}
-                </option>
-              ))}
-            </select>
+              options={services.map((s) => ({
+                value: s.id,
+                label: `${s.name} — ${formatCurrency(s.price)}${s.track_stock ? ` (stock: ${s.stock_qty})` : ''}`,
+              }))}
+              placeholder="Select service…"
+              error={!!svcErrors.service_id}
+            />
             {svcErrors.service_id && <p className="error-text">{svcErrors.service_id}</p>}
           </div>
           <div>
@@ -320,48 +325,88 @@ export default function ActiveSessions({ toast }) {
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button className="btn-secondary" onClick={() => setServiceModal(null)}>Cancel</button>
-            <button className="btn-primary" onClick={handleAddService} disabled={addingSvc}>
-              {addingSvc ? <Spinner size="sm" /> : null} Add
-            </button>
+            <Button size="sm" onClick={handleAddService} loading={addingSvc}>
+              {addingSvc ? 'Adding…' : 'Add'}
+            </Button>
           </div>
         </div>
       </Modal>
 
       {/* End Session Modal */}
       <Modal isOpen={!!endModal} onClose={() => setEndModal(null)} title={`End Session — ${endModal?.station_name}`} size="sm">
-        <div className="space-y-4">
-          <div className="bg-surface-raised border border-line rounded-xl p-4 space-y-2">
-            {[
-              { label: 'Customer', value: endModal?.customer_name },
-              { label: 'Station',  value: endModal?.station_name },
-              { label: 'Rate',     value: `${formatCurrency(endModal?.hourly_rate)}/hr` },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex justify-between items-center">
-                <span className="text-xs text-ink-muted font-semibold uppercase tracking-wide">{label}</span>
-                <span className="text-sm font-semibold text-ink">{value}</span>
+        {(() => {
+          const timeCharge = parseFloat(endModal?.running_time_charge) || 0;
+          const serviceCharge = parseFloat(endModal?.running_service_charge) || 0;
+          const subtotal = Math.round((timeCharge + serviceCharge) * 100) / 100;
+          const discVal = Math.max(0, parseFloat(discount) || 0);
+          const finalTotal = Math.max(0, Math.round((subtotal - discVal) * 100) / 100);
+
+          return (
+            <div className="space-y-4">
+              <div className="bg-surface-raised border border-line rounded-xl p-4 space-y-2">
+                {[
+                  { label: 'Customer', value: endModal?.customer_name },
+                  { label: 'Station',  value: endModal?.station_name },
+                  { label: 'Hourly Rate', value: `${formatCurrency(endModal?.hourly_rate)}/hr` },
+                  { label: 'Time charge', value: formatCurrency(timeCharge) },
+                  ...(serviceCharge > 0 ? [{ label: 'Snacks & Prints', value: formatCurrency(serviceCharge) }] : []),
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between items-center text-xs">
+                    <span className="text-ink-muted font-semibold uppercase tracking-wide">{label}</span>
+                    <span className="font-semibold text-ink">{value}</span>
+                  </div>
+                ))}
+                <div className="pt-2 border-t border-dashed border-[#2A2407]/30 flex justify-between items-center">
+                  <span className="text-xs font-bold text-ink uppercase tracking-wider">Subtotal</span>
+                  <span className="text-sm font-bold font-mono text-ink">{formatCurrency(subtotal)}</span>
+                </div>
               </div>
-            ))}
-          </div>
-          <div>
-            <label className="label">Discount (₹)</label>
-            <input
-              type="number" min="0" step="0.5"
-              className="input"
-              value={discount}
-              onChange={(e) => setDiscount(e.target.value)}
-              id="end-session-discount"
-            />
-            <p className="text-xs text-ink-muted mt-1.5">Leave 0 for no discount.</p>
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button className="btn-secondary" onClick={() => setEndModal(null)}>Cancel</button>
-            <button id="confirm-end-btn" className="btn-danger" onClick={handleEnd} disabled={ending}>
-              {ending ? <Spinner size="sm" /> : <StopCircle className="h-4 w-4" />}
-              {ending ? 'Processing…' : 'End & Generate Bill'}
-            </button>
-          </div>
-        </div>
+
+              <div>
+                <label className="label">Discount (₹)</label>
+                <input
+                  type="number" min="0" step="0.5"
+                  className="input"
+                  value={discount}
+                  onChange={(e) => setDiscount(e.target.value)}
+                  id="end-session-discount"
+                  placeholder="0.00"
+                />
+                <p className="text-xs text-ink-muted mt-1.5">Leave 0 for no discount.</p>
+              </div>
+
+              {/* Live Final Total Preview */}
+              <div className="p-3 bg-[#FAF7EB] border-2 border-[#2A2407] rounded-xl flex items-center justify-between shadow-[2px_2px_0px_#2A2407]">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-ink-muted">Final Bill Amount</span>
+                  <p className="text-xs text-ink-faint">After ₹{discVal.toFixed(2)} discount</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-xl font-extrabold text-[#EC7E00] font-mono">{formatCurrency(finalTotal)}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button className="btn-secondary" onClick={() => setEndModal(null)}>Cancel</button>
+                <Button id="confirm-end-btn" variant="danger" size="sm" onClick={handleEnd} loading={ending}>
+                  {ending ? 'Processing…' : 'End & Generate Bill'}
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
+
+      {/* Quick Counter Sale Modal */}
+      <CounterSaleModal
+        isOpen={counterModal}
+        onClose={() => setCounterModal(false)}
+        onSuccess={(bill) => {
+          fetchSessions()
+          if (bill?.id) navigate(`/bills/${bill.id}`)
+        }}
+        toast={toast}
+      />
     </div>
   )
 }
