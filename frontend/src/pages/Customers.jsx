@@ -4,6 +4,7 @@ import { formatDateTime, apiError } from '../utils/format'
 import Table from '../components/Table'
 import Modal from '../components/Modal'
 import Spinner from '../components/Spinner'
+import Button from '../components/Button'
 import { Plus, Pencil, Search, Phone, X } from 'lucide-react'
 
 export default function Customers({ toast }) {
@@ -93,10 +94,10 @@ export default function Customers({ toast }) {
       key: 'name', label: 'Customer',
       render: (val) => (
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-md bg-surface-raised border border-line text-ink-muted text-xs font-semibold flex items-center justify-center flex-shrink-0">
+          <div className="h-7 w-7 rounded-lg bg-[#ECE4A9] border-2 border-[#2A2407] text-ink text-xs font-bold flex items-center justify-center flex-shrink-0 shadow-[1px_1px_0px_#2A2407]">
             {val.charAt(0).toUpperCase()}
           </div>
-          <span className="font-medium text-ink font-geist">{val}</span>
+          <span className="font-bold text-ink font-geist">{val}</span>
         </div>
       ),
     },
@@ -112,11 +113,18 @@ export default function Customers({ toast }) {
     },
     {
       key: 'visit_count', label: 'Visits',
-      render: (val) => (
-        <span className="font-mono text-xs font-medium text-ink">
-          {val ?? 0}
-        </span>
-      ),
+      render: (val) => {
+        const count = val ?? 0
+        return (
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold font-mono border ${
+            count > 0
+              ? 'bg-[#EC7E00]/15 text-[#2A2407] border-[#EC7E00]/40'
+              : 'bg-stone-100 text-ink-muted border-stone-200'
+          }`}>
+            {count} {count === 1 ? 'visit' : 'visits'}
+          </span>
+        )
+      },
     },
     { key: 'created_at', label: 'Joined', render: (val) => <span className="text-xs text-ink-faint">{formatDateTime(val)}</span> },
     {
@@ -138,18 +146,18 @@ export default function Customers({ toast }) {
           <h1 className="page-title">Customers</h1>
           <p className="text-xs text-ink-muted mt-1">{total} registered customers</p>
         </div>
-        <button id="create-customer-btn" className="btn-primary" onClick={openCreate}>
-          <Plus className="h-4 w-4" /> New customer
-        </button>
+        <Button id="create-customer-btn" size="sm" onClick={openCreate}>
+          New customer
+        </Button>
       </div>
 
       <form onSubmit={handleSearch} className="flex gap-2">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-faint" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted pointer-events-none stroke-[2.2]" />
           <input
             type="text"
             placeholder="Search by name or phone..."
-            className="input pl-8.5 w-64 text-xs"
+            className="input pl-10 w-64 text-xs font-medium"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
@@ -200,9 +208,9 @@ export default function Customers({ toast }) {
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button className="btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-            <button id="save-customer-btn" className="btn-primary" onClick={handleSave} disabled={saving}>
-              {saving ? <Spinner size="sm" /> : null} {saving ? 'Saving…' : 'Save'}
-            </button>
+            <Button id="save-customer-btn" size="sm" onClick={handleSave} loading={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </Button>
           </div>
         </div>
       </Modal>
