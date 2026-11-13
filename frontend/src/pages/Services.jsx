@@ -1,13 +1,19 @@
 import { useState, useEffect, useCallback } from 'react'
 import api from '../api/axios'
+import { useAuth } from '../context/AuthContext'
 import { formatCurrency, apiError } from '../utils/format'
 import Table from '../components/Table'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Spinner from '../components/Spinner'
-import { Plus, Pencil, ToggleLeft, ToggleRight, Search, Package } from 'lucide-react'
+import Button from '../components/Button'
+import Select from '../components/Select'
+import { Plus, Pencil, ToggleLeft, ToggleRight, Search, Package, AlertTriangle } from 'lucide-react'
 
 export default function Services({ toast }) {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
+
   const [services, setServices] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -101,13 +107,13 @@ export default function Services({ toast }) {
 
   const columns = [
     {
-      key: 'name', label: 'Service Name',
+      key: 'name', label: 'Service name',
       render: (val) => (
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-surface-raised border border-line flex items-center justify-center flex-shrink-0">
-            <Package className="h-4 w-4 text-ink-muted" />
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-md bg-surface-raised border border-line flex items-center justify-center flex-shrink-0">
+            <Package className="h-3.5 w-3.5 text-ink-muted" />
           </div>
-          <span className="font-semibold text-ink">{val}</span>
+          <span className="font-medium text-ink font-geist">{val}</span>
         </div>
       ),
     },
@@ -115,16 +121,32 @@ export default function Services({ toast }) {
       key: 'category', label: 'Category',
       render: (val) => <span className="badge badge-PC capitalize">{val}</span>,
     },
-    { key: 'unit', label: 'Unit', render: (val) => <span className="text-ink-muted text-sm">{val}</span> },
+    { key: 'unit', label: 'Unit', render: (val) => <span className="text-ink-muted text-xs">{val}</span> },
     {
       key: 'price', label: 'Price',
-      render: (val) => <span className="font-bold text-ink font-mono">{formatCurrency(val)}</span>,
+      render: (val) => <span className="font-medium text-ink font-mono text-xs">{formatCurrency(val)}</span>,
     },
     {
       key: 'track_stock', label: 'Stock',
-      render: (val, row) => val
-        ? <span className={`font-mono text-sm font-bold ${row.stock_qty <= 5 ? 'text-danger' : 'text-ink'}`}>{row.stock_qty}</span>
-        : <span className="text-ink-faint text-xs">Unlimited</span>,
+      render: (val, row) => {
+        if (!val && row.stock_qty === null) {
+          return <span className="text-ink-faint text-xs">Unlimited</span>
+        }
+        const threshold = row.low_stock_threshold ?? 5
+        const isLow = row.stock_qty !== null && row.stock_qty <= threshold
+        return (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`font-mono text-xs font-bold ${isLow ? 'text-red-600' : 'text-ink'}`}>
+              {row.stock_qty}
+            </span>
+            {isLow && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-red-100 text-red-700 border border-red-300">
+                <AlertTriangle className="h-2.5 w-2.5" /> Low
+              </span>
+            )}
+          </div>
+        )
+      },
     },
     {
       key: 'is_active', label: 'Status',
@@ -132,38 +154,45 @@ export default function Services({ toast }) {
         ? <span className="badge badge-available">Active</span>
         : <span className="badge badge-void">Inactive</span>,
     },
-    {
+    ...(isAdmin ? [{
       key: 'id', label: '',
       render: (_, row) => (
-        <div className="flex items-center gap-1.5">
-          <button onClick={() => openEdit(row)} className="btn-ghost py-1.5 px-2" aria-label={`Edit ${row.name}`}>
+        <div className="flex items-center justify-end gap-1.5">
+          <button onClick={() => openEdit(row)} className="btn-ghost py-1 px-2 text-xs" aria-label={`Edit ${row.name}`}>
             <Pencil className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => setConfirmTarget(row)} className="btn-ghost py-1.5 px-2" aria-label={row.is_active ? 'Deactivate' : 'Activate'}>
+          <button onClick={() => setConfirmTarget(row)} className="btn-ghost py-1 px-2 text-xs" aria-label={row.is_active ? 'Deactivate' : 'Activate'}>
             {row.is_active
-              ? <ToggleRight className="h-4 w-4 text-success" />
-              : <ToggleLeft className="h-4 w-4 text-ink-faint" />}
+              ? <ToggleRight className="h-5 w-5 text-accent" />
+              : <ToggleLeft className="h-5 w-5 text-ink-faint" />}
           </button>
         </div>
       ),
-    },
+    }] : []),
   ]
 
   return (
     <div className="space-y-6">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Services & Stock</h1>
-          <p className="text-sm text-ink-muted mt-0.5">{services.length} services configured</p>
+          <h1 className="page-title">Services & stock</h1>
+          <p className="text-xs text-ink-muted mt-1">{services.length} items configured</p>
         </div>
-        <button id="create-service-btn" className="btn-primary" onClick={openCreate}>
-          <Plus className="h-4 w-4" /> New Service
-        </button>
+        {isAdmin && (
+          <Button id="create-service-btn" size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4 mr-1.5 inline-block" /> New service
+          </Button>
+        )}
       </div>
 
       <div className="relative w-64">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
-        <input className="input pl-9" placeholder="Search services…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted pointer-events-none stroke-[2.2]" />
+        <input
+          className="input pl-10 text-xs font-medium"
+          placeholder="Search services…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       <div className="card">
@@ -179,10 +208,16 @@ export default function Services({ toast }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Category</label>
-              <select className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <Select
+                id="service-category-select"
+                label="Category"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                options={CATEGORIES.map((c) => ({
+                  value: c,
+                  label: c.charAt(0).toUpperCase() + c.slice(1),
+                }))}
+              />
             </div>
             <div>
               <label className="label">Unit</label>
@@ -207,9 +242,9 @@ export default function Services({ toast }) {
           )}
           <div className="flex justify-end gap-3 pt-2">
             <button className="btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-            <button id="save-service-btn" className="btn-primary" onClick={handleSave} disabled={saving}>
-              {saving ? <Spinner size="sm" /> : null} {saving ? 'Saving…' : 'Save'}
-            </button>
+            <Button id="save-service-btn" size="sm" onClick={handleSave} loading={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </Button>
           </div>
         </div>
       </Modal>
