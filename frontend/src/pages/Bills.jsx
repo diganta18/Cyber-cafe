@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import { formatCurrency, formatDateTime, apiError } from '../utils/format'
 import Table from '../components/Table'
-import { Search, ExternalLink, CreditCard } from 'lucide-react'
+import { Search, ExternalLink, CreditCard, ShoppingBag } from 'lucide-react'
 import Spinner from '../components/Spinner'
 import Modal from '../components/Modal'
+import Button from '../components/Button'
+import Select from '../components/Select'
+import CounterSaleModal from '../components/CounterSaleModal'
 
 const STATUS_TABS = ['all', 'unpaid', 'paid', 'void']
 
@@ -23,6 +26,7 @@ export default function Bills({ toast }) {
   const [payModal, setPayModal] = useState(null)
   const [payMode, setPayMode] = useState('cash')
   const [paying, setPaying] = useState(false)
+  const [counterModal, setCounterModal] = useState(false)
 
   const fetchBills = useCallback(async () => {
     setLoading(true)
@@ -118,6 +122,9 @@ export default function Bills({ toast }) {
           <h1 className="page-title">Bills</h1>
           <p className="text-xs text-ink-muted mt-1">{total} total bills recorded</p>
         </div>
+        <Button id="open-counter-sale-btn" size="sm" onClick={() => setCounterModal(true)}>
+          <ShoppingBag className="h-4 w-4 mr-1.5" /> Quick counter sale
+        </Button>
       </div>
 
       {/* Status tabs + search */}
@@ -138,11 +145,11 @@ export default function Bills({ toast }) {
           onSubmit={(e) => { e.preventDefault(); setSearch(searchInput); setPage(1) }}
         >
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-faint" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted pointer-events-none stroke-[2.2]" />
             <input
               type="text"
               placeholder="Search bill or customer..."
-              className="input pl-8.5 w-56 text-xs"
+              className="input pl-10 w-56 text-xs font-medium"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
@@ -174,27 +181,42 @@ export default function Bills({ toast }) {
       {/* Pay Modal */}
       <Modal isOpen={!!payModal} onClose={() => setPayModal(null)} title={`Record Payment — ${payModal?.bill_no}`} size="sm">
         <div className="space-y-4">
-          <div className="bg-surface-raised border border-line rounded-xl p-5 flex justify-between items-center">
-            <span className="text-sm text-ink-muted font-semibold">Amount Due</span>
-            <span className="text-3xl font-bold text-success font-mono">{formatCurrency(payModal?.total)}</span>
+          <div className="bg-[#ECE4A9] border-2 border-[#2A2407] rounded-xl p-5 flex justify-between items-center shadow-[2px_2px_0px_#2A2407]">
+            <span className="text-sm text-ink font-bold uppercase tracking-wider">Amount Due</span>
+            <span className="text-3xl font-extrabold text-accent font-mono">{formatCurrency(payModal?.total)}</span>
           </div>
           <div>
-            <label className="label">Payment Mode</label>
-            <select className="input" value={payMode} onChange={(e) => setPayMode(e.target.value)} id="payment-mode-select">
-              {['cash', 'upi', 'card'].map((m) => (
-                <option key={m} value={m}>{m.toUpperCase()}</option>
-              ))}
-            </select>
+            <Select
+              id="payment-mode-select"
+              label="Payment Mode"
+              value={payMode}
+              onChange={(e) => setPayMode(e.target.value)}
+              options={[
+                { value: 'cash', label: 'CASH' },
+                { value: 'upi', label: 'UPI' },
+                { value: 'card', label: 'CARD' },
+              ]}
+            />
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button className="btn-secondary" onClick={() => setPayModal(null)}>Cancel</button>
-            <button id="confirm-pay-btn" className="btn-primary" onClick={handlePay} disabled={paying}>
-              {paying ? <Spinner size="sm" /> : <CreditCard className="h-4 w-4" />}
+            <Button id="confirm-pay-btn" size="sm" onClick={handlePay} loading={paying}>
               {paying ? 'Processing…' : 'Confirm Payment'}
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
+
+      {/* Quick Counter Sale Modal */}
+      <CounterSaleModal
+        isOpen={counterModal}
+        onClose={() => setCounterModal(false)}
+        onSuccess={(bill) => {
+          fetchBills()
+          if (bill?.id) navigate(`/bills/${bill.id}`)
+        }}
+        toast={toast}
+      />
     </div>
   )
 }
